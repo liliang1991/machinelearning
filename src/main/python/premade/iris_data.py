@@ -107,9 +107,26 @@ if __name__ == '__main__':
     for index,value in enumerate(my_feature_columns):
         #0 _NumericColumn(key='SepalLength', shape=(1,), default_value=None, dtype=tf.float32, normalizer_fn=None)
         print(index,value)
+    #使用 hidden_units 参数来定义神经网络内每个隐藏层中的神经元数量。,列表长度表示隐藏层的数量
+   # n_classes 参数指定了神经网络可以预测的潜在值的数量。由于鸢尾花问题将鸢尾花品种分为 3 类，因此我们将 n_classes 设置为 3。
+   #指定分类器
     classifier = tf.estimator.DNNClassifier(
         feature_columns=my_feature_columns,
         # Two hidden layers of 10 nodes each.
         hidden_units=[10, 10],
         # The model must choose between 3 classes.
         n_classes=3)
+    #train_feature 是 Python 字典，其中：
+
+    #每个键都是特征的名称。
+    #每个值都是包含训练集中每个样本的值的数组。
+    #train_y包含训练集中每个样本的标签值的数组
+    #batch_size 定义批次大小的整数。
+    #steps 参数指示 train 在完成指定的迭代次数后停止训练
+    #训练模型
+
+
+
+    classifier.train(
+        input_fn=lambda:iris_data.train_input_fn(train_x, train_y, args.batch_size),
+        steps=args.train_steps)
