@@ -93,6 +93,7 @@ def csv_input_fn(csv_path, batch_size):
     return dataset
 if __name__ == '__main__':
     # Feature columns describe how to use the input.
+    #创建特征列
     my_feature_columns = []
     y_name='Species'
     train_path, test_path = maybe_download()
@@ -106,3 +107,9 @@ if __name__ == '__main__':
     for index,value in enumerate(my_feature_columns):
         #0 _NumericColumn(key='SepalLength', shape=(1,), default_value=None, dtype=tf.float32, normalizer_fn=None)
         print(index,value)
+    classifier = tf.estimator.DNNClassifier(
+        feature_columns=my_feature_columns,
+        # Two hidden layers of 10 nodes each.
+        hidden_units=[10, 10],
+        # The model must choose between 3 classes.
+        n_classes=3)
