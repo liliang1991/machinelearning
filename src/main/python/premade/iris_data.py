@@ -1,6 +1,7 @@
+import argparse
 import pandas as pd
 import tensorflow as tf
-
+import iris_data
 TRAIN_URL = "http://download.tensorflow.org/data/iris_training.csv"
 TEST_URL = "http://download.tensorflow.org/data/iris_test.csv"
 
@@ -124,9 +125,16 @@ if __name__ == '__main__':
     #batch_size 定义批次大小的整数。
     #steps 参数指示 train 在完成指定的迭代次数后停止训练
     #训练模型
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--batch_size', default=100, type=int, help='batch size')
+    parser.add_argument('--train_steps', default=1000, type=int,
+                    help='number of training steps')
 
-
-
+    args = parser.parse_args([])
     classifier.train(
         input_fn=lambda:iris_data.train_input_fn(train_x, train_y, args.batch_size),
         steps=args.train_steps)
+    eval_result = classifier.evaluate(
+        input_fn=lambda:iris_data.eval_input_fn(train_x, train_y,
+                                                args.batch_size))
+    print(eval_result)
