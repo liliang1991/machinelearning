@@ -163,12 +163,13 @@ if __name__ == '__main__':
         input_fn=lambda:iris_data.eval_input_fn(predict_x,
                                                 labels=None,
                                                 batch_size=args.batch_size))
-    print(len(predictions()))
+    #print(len(list(predictions)))
     #class_ids 键存储的是一个 1 元素数组，用于标识可能性最大的品种。
     for pred_dict, expec in zip(predictions, expected):
         template = ('\nPrediction is "{}" ({:.1f}%), expected "{}"')
-
+        print(pred_dict)
         class_id = pred_dict['class_ids'][0]
+
         probability = pred_dict['probabilities'][class_id]
 
         print(template.format(iris_data.SPECIES[class_id],
