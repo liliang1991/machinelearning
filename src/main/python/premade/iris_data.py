@@ -159,6 +159,8 @@ if __name__ == '__main__':
         'PetalLength': [1.7, 4.2, 5.4],
         'PetalWidth': [0.5, 1.5, 2.1],
     }
+    #predict 方法返回一个 Python 可迭代对象，为每个样本生成一个预测结果字典。此字典包含几个键
+    # probabilities 键存储的是一个由三个浮点值组成的列表，每个浮点值表示输入样本是特定鸢尾花品种的概率
     predictions = classifier.predict(
         input_fn=lambda:iris_data.eval_input_fn(predict_x,
                                                 labels=None,
