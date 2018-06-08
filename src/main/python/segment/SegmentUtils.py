@@ -8,5 +8,4 @@ def segment(value,type):
 
 
 if __name__ == '__main__':
-    print(pd.__version__)
     segment("我来到北京清华大学",False)
