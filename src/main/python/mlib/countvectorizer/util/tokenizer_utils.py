@@ -3,7 +3,7 @@ from pyspark.sql.functions import col, udf
 from pyspark.sql.types import IntegerType
 from pyspark.shell import spark
 sentenceDataFrame = spark.createDataFrame([
-    (0, "Hi I heard about Spark"),
+    (0, "我们是中国人"),
     (1, "I wish Java could use case classes"),
     (2, "Logistic,regression,models,are,neat")
 ], ["id", "sentence"])
