@@ -7,11 +7,16 @@ documentDF = spark.createDataFrame([
     ("Logistic regression models are neat".split(" "), )
 ], ["text"])
 
-# Learn a mapping from words to Vectors.
-word2Vec = Word2Vec(vectorSize=3, minCount=0, inputCol="text", outputCol="result")
-model = word2Vec.fit(documentDF)
+def Word2VecModel(input_col, output_col, vocab_size, minCount, input_data):
+    # mindf 必须在文档中出现的最少次数
+    # vocabSize 词典大小
+    wv = Word2Vec(inputCol=input_col, outputCol=output_col, vocabSize=vocab_size, minDF=minCount)
+    model = wv.fit(input_data)
+    result = model.transform(input_data)
+    return result;
 
-result = model.transform(documentDF)
-for row in result.collect():
-    text, vector = row
-    print("Text: [%s] => \nVector: %s\n" % (", ".join(text), str(vector)))
+
+
+# for row in result.collect():
+#     text, vector = row
+#     print("Text: [%s] => \nVector: %s\n" % (", ".join(text), str(vector)))
