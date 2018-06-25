@@ -6,7 +6,8 @@ import  numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 ##载入数据集
-mnist=input_data.read_data_sets("/home/moon/work/shendu/mnist_data",one_hot=True)
+mnist=input_data.read_data_sets(""
+                                "",one_hot=True)
 #每个批次的大小
 batch_size=100
 #计算有多少批次
