@@ -55,6 +55,7 @@ def eval_input_fn(features, labels, batch_size):
     # Convert the inputs to a Dataset.
     dataset = tf.data.Dataset.from_tensor_slices(inputs)
 
+
     # Batch the examples
     assert batch_size is not None, "batch_size must not be None"
     dataset = dataset.batch(batch_size)
@@ -99,6 +100,8 @@ def csv_input_fn(csv_path, batch_size):
 
 
 if __name__ == '__main__':
+    #设置tf log 级别
+    tf.logging.set_verbosity(tf.logging.INFO)
     # Feature columns describe how to use the input.
     # 创建特征列
     my_feature_columns = []
@@ -106,8 +109,15 @@ if __name__ == '__main__':
     train_path, test_path = maybe_download()
     train = pd.read_csv(train_path, names=CSV_COLUMN_NAMES, header=0)
     train_x, train_y = train, train.pop(y_name)
-    # print(train)
-    # print(train_y)
+#     SepalLength  SepalWidth  PetalLength  PetalWidth
+# 0            6.4         2.8          5.6         2.2
+# 1            5.0         2.3          3.3         1.0
+   # print(train)
+   #第一列数据条数下标 ，第二列 花的品种
+   #  0      2
+   #  1      1
+   #  2      2
+   # print(train_y)
     for key in train_x.keys():
         # print(train_x.get_values(key))
         my_feature_columns.append(tf.feature_column.numeric_column(key=key))
@@ -146,6 +156,7 @@ if __name__ == '__main__':
     # eval_input_fn 函数负责提供来自测试集的一批样本
 
     ##评估模型的效果
+    print(iris_data)
     eval_result = classifier.evaluate(
         input_fn=lambda: iris_data.eval_input_fn(train_x, train_y,
                                                  args.batch_size))
