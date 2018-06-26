@@ -60,7 +60,7 @@ english.columns = ['spa_qura1','spa_qura2','label']
 
 english1 = spa[['eng_qura1','eng_qura2','label']]
 english1.columns = ['spa_qura1','spa_qura2','label']
-
+pd.set_option('display.max_rows',None)
 data = pd.concat([test, english_spa[test.columns], spa[test.columns],english[english.label == 1][test.columns]]).reset_index()
 
 
@@ -120,6 +120,11 @@ def Edit_distance_str(str1, str2):
    similarity = 1-(edit_distance_distance/max(len(str1), len(str2)))
    return {'Distance': edit_distance_distance, 'Similarity': similarity}
 #print(data.apply(w2v_similar, axis = 1))
+#axis=0表述列
+#axis=1表述行
+#print(np.concatenate([w2v_similar],axis=1))
+
+print(data)
 data['spa_w2v_similar'] = int(data.apply(w2v_similar, axis = 1))
 data['spa_w2v_manha_similar'] = data.apply(w2v_manha_similar, axis = 1)
 data['spa_w2v_cos_similar'] = data.apply(w2v_cos_similar, axis = 1)
