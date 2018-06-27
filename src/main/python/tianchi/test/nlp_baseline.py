@@ -101,15 +101,15 @@ def Cosine(vec1, vec2):
     return npvec1.dot(npvec2)/(math.sqrt((npvec1**2).sum()) * math.sqrt((npvec2**2).sum()))
 
 def w2v_similar(data):
-	print(np.array(data['spa_qura_w2v_1']))
+#	print(np.array(data['spa_qura_w2v_1']))
 	#print(calEuclideanDistance(np.array(data['spa_qura_w2v_1']), np.array(data['spa_qura_w2v_2'])))
-	return calEuclideanDistance(np.array(data['spa_qura_w2v_1']), np.array(data['spa_qura_w2v_2']))
+	return calEuclideanDistance(np.array(data['spa_list_1']), np.array(data['spa_list_2']))
 
 def w2v_manha_similar(data):
-	return Manhattan(data['spa_qura_w2v_1'], data['spa_qura_w2v_2'])
+	return Manhattan(data['spa_list_1'], data['spa_list_2'])
 
 def w2v_cos_similar(data):
-	return Cosine(data['spa_qura_w2v_1'], data['spa_qura_w2v_2'])
+	return Cosine(data['spa_list_1'], data['spa_list_2'])
 
 def str_similar(data):
 	return Edit_distance_str(data['spa_qura1'], data['spa_qura2'])
@@ -123,9 +123,9 @@ def Edit_distance_str(str1, str2):
 #axis=0表述列
 #axis=1表述行
 #print(np.concatenate([w2v_similar],axis=1))
+print(data.iloc[0])
 
-print(data)
-data['spa_w2v_similar'] = int(data.apply(w2v_similar, axis = 1))
+data['spa_w2v_similar'] = data.apply(w2v_similar, axis = 1)
 data['spa_w2v_manha_similar'] = data.apply(w2v_manha_similar, axis = 1)
 data['spa_w2v_cos_similar'] = data.apply(w2v_cos_similar, axis = 1)
 #data['spa_str_edit_similar'] = data.apply(str_similar, axis = 1)
@@ -165,10 +165,10 @@ s = 0
 for i in tt:
 	s = s + i
 s = s /5
-
+print(s)
 test['label'] = list(s)
 print (result)
 print (np.mean(result))
 print (len(test))
 
-test[['label']].to_csv('result.txt',index = None, header = None)
+test[['label']].to_csv('/home/moon/work/tianchi/data/result.txt',index = None, header = None)
