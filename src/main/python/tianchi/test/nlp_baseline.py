@@ -165,7 +165,7 @@ s = 0
 for i in tt:
 	s = s + i
 s = s /5
-print(s)
+
 test['label'] = list(s)
 print (result)
 print (np.mean(result))
