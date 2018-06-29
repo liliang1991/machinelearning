@@ -7,8 +7,8 @@ from sklearn.metrics import log_loss
 import math
 import networkx as nx
 def lgb_model(X,y,test):
-	N = 10
-	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=42)
+	N = 2
+	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=5)
 
 	xx_cv = []
 	xx_pre = []
@@ -19,7 +19,7 @@ def lgb_model(X,y,test):
         'objective': 'binary',
         'metric': 'binary_logloss',
         'num_leaves': 60,
-        'learning_rate': 0.01,
+        'learning_rate': 0.05,
         'feature_fraction': 0.8,
         'bagging_fraction': 0.8,
         'bagging_freq': 5,
@@ -160,8 +160,10 @@ test_y = test.pop('label').values
 test1 = test[feature].values
 
 result, tt = lgb_model(X, y, test1)
+print(len(tt))
 s = 0
 for i in tt:
+        #print (i)
 	s = s + i
 s = s /5
 
