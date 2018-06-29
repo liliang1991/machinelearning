@@ -7,7 +7,7 @@ from sklearn.metrics import log_loss
 import math
 import networkx as nx
 def lgb_model(X,y,test):
-	N = 5
+	N = 10
 	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=42)
 
 	xx_cv = []
@@ -19,7 +19,7 @@ def lgb_model(X,y,test):
         'objective': 'binary',
         'metric': 'binary_logloss',
         'num_leaves': 60,
-        'learning_rate': 0.1,
+        'learning_rate': 0.01,
         'feature_fraction': 0.8,
         'bagging_fraction': 0.8,
         'bagging_freq': 5,
