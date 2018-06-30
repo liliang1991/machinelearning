@@ -6,6 +6,7 @@ import lightgbm as lgb
 from sklearn.metrics import log_loss
 import math
 import networkx as nx
+
 def lgb_model(X,y,test):
 	N = 2
 	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=5)
