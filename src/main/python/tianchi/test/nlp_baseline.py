@@ -7,16 +7,16 @@ from sklearn.metrics import log_loss
 import math
 
 def lgb_model(X,y,test):
-	N = 2
-	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=5)
+	N = 5
+	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=42)
 
 	xx_cv = []
 	xx_pre = []
 
     # specify your configurations as a dict
 	params = {
-		'max_bin':1000,
-		'num_iterations': 1000,
+		'max_bin':3000,
+		'num_iterations': 10000,
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': 'binary_logloss',
@@ -39,16 +39,14 @@ def lgb_model(X,y,test):
                     lgb_train,
                     num_boost_round=40000,
                     valid_sets=lgb_eval,
-                    verbose_eval=250,
+                    verbose_eval=150,
                     early_stopping_rounds=50)
 
 		print('Start predicting...')
 		y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 		xx_cv.append(log_loss(y_test,y_pred))
 		xx_pre.append(gbm.predict(test, num_iteration=gbm.best_iteration))
-		print(xx_cv)
-		print(xx_pre)
-		print("===========")
+
 	return xx_cv, xx_pre
 #加载数据
 # 英语问句对  英语问句1，西班牙语翻译1，英语问句2，西班牙语翻译2，匹配标注。
@@ -76,7 +74,6 @@ english1.columns = ['spa_qura1','spa_qura2','label']
 pd.set_option('display.max_rows',None)
 # test  英语问句对  西班牙问句对 英语问句对(label==1)
 data = pd.concat([test, english_spa[test.columns], spa[test.columns],english[english.label == 1][test.columns]]).reset_index()
-print("data======")
 
 #西班牙语问句1
 data['spa_qura_list_1'] = data['spa_qura1'].apply(lambda x : x.split(' '))
@@ -139,7 +136,6 @@ def Edit_distance_str(str1, str2):
 #axis=0表述列
 #axis=1表述行
 #print(np.concatenate([w2v_similar],axis=1))
-print(data.iloc[0])
 
 data['spa_w2v_similar'] = data.apply(w2v_similar, axis = 1)
 data['spa_w2v_manha_similar'] = data.apply(w2v_manha_similar, axis = 1)
@@ -172,15 +168,13 @@ test = data[data['label']==-1]
 
 y = train.pop('label').values
 X = train[feature].values
-print(">>>>>>>>>>>>>")
-print(X)
+
 test_y = test.pop('label').values
 test1 = test[feature].values
 result, tt = lgb_model(X, y, test1)
 s = 0
 for i in tt:
         #print (i)
-	print(str(i)+"=======")
 	s = s + i
 	print(s)
 s = s /5
