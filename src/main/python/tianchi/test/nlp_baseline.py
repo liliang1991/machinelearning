@@ -43,11 +43,11 @@ def lgb_model(X,y,test):
          #            verbose_eval=150,
          #            early_stopping_rounds=50)
 		gbm = LGBMClassifier(max_depth=6,min_samples_split=10,min_samples_leaf=5,max_features=0)
-		gbm.fit(X_train,y_train)[:,1]
+		gbm.fit(X_train,y_train)
 		print('Start predicting...')
-		y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+		y_pred = gbm.predict(X_test)
 		xx_cv.append(log_loss(y_test,y_pred))
-		xx_pre.append(gbm.predict(test, num_iteration=gbm.best_iteration))
+		xx_pre.append(gbm.predict(test))
 
 	return xx_cv, xx_pre
 #加载数据
