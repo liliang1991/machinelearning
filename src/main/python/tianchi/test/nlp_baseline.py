@@ -5,6 +5,7 @@ from sklearn.model_selection import StratifiedKFold
 import lightgbm as lgb
 from sklearn.metrics import log_loss
 import math
+from lightgbm import LGBMClassifier,LGBMRegressor
 
 def lgb_model(X,y,test):
 	N = 5
@@ -35,13 +36,14 @@ def lgb_model(X,y,test):
 
 		print('Start training...')
     	# train
-		gbm = lgb.train(params,
-                    lgb_train,
-                    num_boost_round=40000,
-                    valid_sets=lgb_eval,
-                    verbose_eval=150,
-                    early_stopping_rounds=50)
-
+        # gbm = lgb.train(params,
+         #            lgb_train,
+         #            num_boost_round=40000,
+         #            valid_sets=lgb_eval,
+         #            verbose_eval=150,
+         #            early_stopping_rounds=50)
+		gbm = LGBMClassifier(max_depth=6,min_samples_split=10,min_samples_leaf=5,max_features=0)
+		gbm.fit(X_train,y_train)[:,1]
 		print('Start predicting...')
 		y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 		xx_cv.append(log_loss(y_test,y_pred))
