@@ -42,12 +42,15 @@ def lgb_model(X,y,test):
          #            valid_sets=lgb_eval,
          #            verbose_eval=150,
          #            early_stopping_rounds=50)
-		gbm = LGBMClassifier(max_depth=6,min_samples_split=10,min_samples_leaf=5,max_features=0)
+		gbm = LGBMClassifier(max_depth=7,min_samples_split=10,min_samples_leaf=5,num_leaves=40)
 		gbm.fit(X_train,y_train)
 		print('Start predicting...')
 		y_pred = gbm.predict(X_test)
 		xx_cv.append(log_loss(y_test,y_pred))
+		print(gbm.predict(test))
+		print("========")
 		xx_pre.append(gbm.predict(test))
+		from sklearn import metrics
 
 	return xx_cv, xx_pre
 #加载数据
@@ -162,9 +165,9 @@ data['jiaoji_cnt_rate1'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(
 data['jiaoji_cnt_rate2'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(len(x['spa_qura2'])),axis = 1)
 data['jiaoji_cnt_rate_char'] = data['jiaoji_cnt_rate1'] - data['jiaoji_cnt_rate2']
 
-feature = ['spa_w2v_cos_similar','spa_w2v_manha_similar','spa_w2v_similar', 'count1', 'count2', 'count_cha', 'seq_len_1', 'seq_len_2', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
+#feature = ['spa_w2v_cos_similar','spa_w2v_manha_similar','spa_w2v_similar', 'count1', 'count2', 'count_cha', 'seq_len_1', 'seq_len_2', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
 
-
+feature = ['spa_w2v_cos_similar']
 train = data[data['label']!=-1]
 test = data[data['label']==-1]
 
@@ -178,7 +181,6 @@ s = 0
 for i in tt:
         #print (i)
 	s = s + i
-	print(s)
 s = s /5
 
 test['label'] = list(s)
