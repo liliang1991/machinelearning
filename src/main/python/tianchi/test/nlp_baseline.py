@@ -1,15 +1,29 @@
 from gensim.models import Word2Vec
 import pandas as pd 
 import numpy as np 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import train_test_split
 import lightgbm as lgb
 from sklearn.metrics import log_loss
 import math
 from lightgbm import LGBMClassifier,LGBMRegressor
+from scipy.stats import pearsonr
+# [('spa_w2v_manha_similar', -0.15783060354009604)
+# 	, ('spa_w2v_similar', -0.15166948992493076),
+#   ('count2', -0.13110359500445648),
+#   ('count1', -0.1297934287499081),
+#   ('seq_len_cha', -0.05885071403460605),
+#   ('jiaoji_cnt_rate_char', 0.032198450007253125),
+#   ('jiaoji_cnt_rate2', 0.22533969797324363),
+#   ('jiaoji_cnt_rate1', 0.2289504361475967),
+#   ('spa_w2v_cos_similar', 0.408481527009395),
+#   ('count_cha', nan),
+#   ('seq_len_1', -0.10625570775088157),
+#   ('seq_len_2', -0.09896451122776097),
+#   ('jiaoji_cnt', -0.0462733016239212)]
+
 
 def lgb_model(X,y,test):
 	N = 5
-	skf = StratifiedKFold(n_splits=N,shuffle=False,random_state=42)
 
 	xx_cv = []
 	xx_pre = []
@@ -28,29 +42,22 @@ def lgb_model(X,y,test):
         'bagging_freq': 5,
         'verbose': -1
    	}
+	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.1, random_state=0)
+	columns=X_train.columns
+	feature_impotance=[(column,pearsonr(X_train[column],y_train)[0]) for column in columns]
+	print(feature_impotance.sort(key=lambda x:x[1]))
 
-	for train_in,test_in in skf.split(X,y):
-		X_train,X_test,y_train,y_test  = X[train_in],X[test_in],y[train_in],y[test_in]
-		lgb_train = lgb.Dataset(X_train, y_train)
-		lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
 
-		print('Start training...')
-    	# train
-        # gbm = lgb.train(params,
-         #            lgb_train,
-         #            num_boost_round=40000,
-         #            valid_sets=lgb_eval,
-         #            verbose_eval=150,
-         #            early_stopping_rounds=50)
-		gbm = LGBMClassifier(max_depth=7,min_samples_split=10,min_samples_leaf=5,num_leaves=40)
-		gbm.fit(X_train,y_train)
-		print('Start predicting...')
-		y_pred = gbm.predict(X_test)
-		xx_cv.append(log_loss(y_test,y_pred))
-		print(gbm.predict(test))
-		print("========")
-		xx_pre.append(gbm.predict(test))
-		from sklearn import metrics
+
+
+	gbm = LGBMClassifier(max_depth=7,min_samples_split=10,min_samples_leaf=5,num_leaves=40)
+	gbm.fit(X_train,y_train)
+	print('Start predicting...')
+	y_pred = gbm.predict(X_test)
+	xx_cv.append(log_loss(y_test,y_pred))
+	print(gbm.predict(test))
+	print("========")
+	xx_pre.append(gbm.predict(test))
 
 	return xx_cv, xx_pre
 #加载数据
@@ -165,14 +172,14 @@ data['jiaoji_cnt_rate1'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(
 data['jiaoji_cnt_rate2'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(len(x['spa_qura2'])),axis = 1)
 data['jiaoji_cnt_rate_char'] = data['jiaoji_cnt_rate1'] - data['jiaoji_cnt_rate2']
 
-#feature = ['spa_w2v_cos_similar','spa_w2v_manha_similar','spa_w2v_similar', 'count1', 'count2', 'count_cha', 'seq_len_1', 'seq_len_2', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
+feature = ['spa_w2v_cos_similar', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
 
-feature = ['spa_w2v_cos_similar']
+#feature = ['spa_w2v_cos_similar']
 train = data[data['label']!=-1]
 test = data[data['label']==-1]
 
-y = train.pop('label').values
-X = train[feature].values
+y = train.pop('label')
+X = train[feature]
 
 test_y = test.pop('label').values
 test1 = test[feature].values
@@ -181,7 +188,7 @@ s = 0
 for i in tt:
         #print (i)
 	s = s + i
-s = s /5
+#s = s /5
 
 test['label'] = list(s)
 print (result)
