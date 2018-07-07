@@ -1,6 +1,6 @@
 from gensim.models import Word2Vec
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 import lightgbm as lgb
 from sklearn.metrics import log_loss
@@ -31,29 +31,38 @@ def lgb_model(X,y,test):
     # specify your configurations as a dict
 	params = {
 		'max_bin':3000,
-		'num_iterations': 10000,
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': 'binary_logloss',
-        'num_leaves': 600,
+		 'max_depth':7,
+        'num_leaves': 40,
         'learning_rate': 0.01,
         'feature_fraction': 0.8,
         'bagging_fraction': 0.8,
         'bagging_freq': 5,
+		'min_samples_split':10,
         'verbose': -1
    	}
-	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.1, random_state=0)
-	columns=X_train.columns
-	feature_impotance=[(column,pearsonr(X_train[column],y_train)[0]) for column in columns]
-	print(feature_impotance.sort(key=lambda x:x[1]))
+	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.05, random_state=0)
+	#皮尔逊
+	# columns=X_train.columns
+	# feature_impotance=[(column,pearsonr(X_train[column],y_train)[0]) for column in columns]
+	# print(feature_impotance)
+	#
+	# from minepy import MINE
+	# m = MINE()
+	# m.compute_score([X_train,y_train])
+	d_train = lgb.Dataset(X_train,
+						  y_train)
+	lgb_eval = lgb.Dataset(X_test, y_test, reference=d_train)
 
 
-
-
-	gbm = LGBMClassifier(max_depth=7,min_samples_split=10,min_samples_leaf=5,num_leaves=40)
-	gbm.fit(X_train,y_train)
+	gbm = lgb.train(params,d_train,num_boost_round=1000,valid_sets=lgb_eval,
+					verbose_eval=250,
+					early_stopping_rounds=50)
+	#gbm.fit(X_train,y_train)
 	print('Start predicting...')
-	y_pred = gbm.predict(X_test)
+	y_pred = gbm.predict(X_test,num_iteration=gbm.best_iteration)
 	xx_cv.append(log_loss(y_test,y_pred))
 	print(gbm.predict(test))
 	print("========")
@@ -172,7 +181,8 @@ data['jiaoji_cnt_rate1'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(
 data['jiaoji_cnt_rate2'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(len(x['spa_qura2'])),axis = 1)
 data['jiaoji_cnt_rate_char'] = data['jiaoji_cnt_rate1'] - data['jiaoji_cnt_rate2']
 
-feature = ['spa_w2v_cos_similar', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
+#spa_w2v_cos_similar 余弦相似度
+feature = ['spa_w2v_manha_similar','spa_w2v_cos_similar', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
 
 #feature = ['spa_w2v_cos_similar']
 train = data[data['label']!=-1]
