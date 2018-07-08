@@ -43,7 +43,7 @@ def lgb_model(X,y,test):
 		'min_samples_split':10,
         'verbose': -1
    	}
-	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.05, random_state=0)
+	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.1, random_state=0)
 	#皮尔逊
 	# columns=X_train.columns
 	# feature_impotance=[(column,pearsonr(X_train[column],y_train)[0]) for column in columns]
@@ -62,6 +62,7 @@ def lgb_model(X,y,test):
 					early_stopping_rounds=50)
 	#gbm.fit(X_train,y_train)
 	print('Start predicting...')
+
 	y_pred = gbm.predict(X_test,num_iteration=gbm.best_iteration)
 	xx_cv.append(log_loss(y_test,y_pred))
 	print(gbm.predict(test))
@@ -152,7 +153,8 @@ def Edit_distance_str(str1, str2):
    import Levenshtein
    edit_distance_distance = Levenshtein.distance(str1, str2)
    similarity = 1-(edit_distance_distance/max(len(str1), len(str2)))
-   return {'Distance': edit_distance_distance, 'Similarity': similarity}
+   #return {'Distance': edit_distance_distance, 'Similarity': similarity}
+   return similarity
 #print(data.apply(w2v_similar, axis = 1))
 #axis=0表述列
 #axis=1表述行
@@ -161,7 +163,7 @@ def Edit_distance_str(str1, str2):
 data['spa_w2v_similar'] = data.apply(w2v_similar, axis = 1)
 data['spa_w2v_manha_similar'] = data.apply(w2v_manha_similar, axis = 1)
 data['spa_w2v_cos_similar'] = data.apply(w2v_cos_similar, axis = 1)
-#data['spa_str_edit_similar'] = data.apply(str_similar, axis = 1)
+data['spa_str_edit_similar'] = data.apply(str_similar, axis = 1)
 
 def count_cha(data):
 	return len(data['spa_qura_list_1']) - len(data['spa_qura_list_1'])
@@ -182,8 +184,7 @@ data['jiaoji_cnt_rate2'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(
 data['jiaoji_cnt_rate_char'] = data['jiaoji_cnt_rate1'] - data['jiaoji_cnt_rate2']
 
 #spa_w2v_cos_similar 余弦相似度
-feature = ['spa_w2v_manha_similar','spa_w2v_cos_similar', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
-
+feature = ['spa_str_edit_similar','spa_w2v_manha_similar','spa_w2v_cos_similar', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
 #feature = ['spa_w2v_cos_similar']
 train = data[data['label']!=-1]
 test = data[data['label']==-1]
