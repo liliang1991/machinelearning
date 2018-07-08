@@ -74,3 +74,13 @@ gbm = LGBMClassifier(max_depth=6,min_samples_split=10,min_samples_leaf=5,max_fea
 cls=LGBMRegressor(random_state=0,reg_alpha=0,num_leaves=40,max_depth=7,n_estimators=200,subsample=0.75,colsample_bytree=0.75,reg_lambda=0.5)
 cls.fit(X_train,y_train)[:,1]
 #kNN(样本多，特征少)
+
+
+
+
+#聚类
+from sklearn.cluster import AgglomerativeClustering
+
+data=pd.read_csv(".csv").fillna(0,axis=1)
+y=data.label
+feature=data.drop('label',axis=1)
