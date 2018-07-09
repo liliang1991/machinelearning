@@ -34,7 +34,7 @@ def lgb_model(X,y,test):
         'boosting_type': 'gbdt',
         'objective': 'binary',
         'metric': 'binary_logloss',
-		 'max_depth':7,
+		 'max_depth': 7,
         'num_leaves': 40,
         'learning_rate': 0.01,
         'feature_fraction': 0.8,
@@ -43,7 +43,7 @@ def lgb_model(X,y,test):
 		'min_samples_split':10,
         'verbose': -1
    	}
-	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.1, random_state=0)
+	X_train, X_test, y_train, y_test  = train_test_split(X, y, test_size=0.3, random_state=0)
 	#皮尔逊
 	# columns=X_train.columns
 	# feature_impotance=[(column,pearsonr(X_train[column],y_train)[0]) for column in columns]
@@ -57,12 +57,11 @@ def lgb_model(X,y,test):
 	lgb_eval = lgb.Dataset(X_test, y_test, reference=d_train)
 
 
-	gbm = lgb.train(params,d_train,num_boost_round=1000,valid_sets=lgb_eval,
+	gbm = lgb.train(params,d_train,num_boost_round=5000,valid_sets=lgb_eval,
 					verbose_eval=250,
 					early_stopping_rounds=50)
 	#gbm.fit(X_train,y_train)
 	print('Start predicting...')
-
 	y_pred = gbm.predict(X_test,num_iteration=gbm.best_iteration)
 	xx_cv.append(log_loss(y_test,y_pred))
 	print(gbm.predict(test))
@@ -105,7 +104,7 @@ data['spa_qura_list_2'] = data['spa_qura2'].apply(lambda x : x.split(' '))
 spa_list = list(data['spa_qura_list_1'])
 spa_list.extend(list(data['spa_qura_list_2']))
 #班牙语问句 Word2Vec
-model = Word2Vec(spa_list, sg=1, size=30,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=4)
+model = Word2Vec(spa_list, sg=1, size=30,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=8)
 
 def seq_to_w2v(seq, model):
 	words = []
@@ -173,8 +172,8 @@ data['count2'] = data['spa_qura_list_2'].apply(lambda x : len(x))
 
 data['count_cha'] = data.apply(count_cha, axis = 1)
 
-data['seq_len_1'] =  data['spa_qura1'].apply(lambda x : len(x.split(',')))
-data['seq_len_2'] =  data['spa_qura2'].apply(lambda x : len(x.split(',')))
+data['seq_len_1'] =  data['spa_qura1'].apply(lambda x : len(x.split('\t')))
+data['seq_len_2'] =  data['spa_qura2'].apply(lambda x : len(x.split('\t')))
 
 data['seq_len_cha'] = data['seq_len_1'] - data['seq_len_2']
 
@@ -184,7 +183,7 @@ data['jiaoji_cnt_rate2'] = data.apply(lambda x : float(x['jiaoji_cnt']) / float(
 data['jiaoji_cnt_rate_char'] = data['jiaoji_cnt_rate1'] - data['jiaoji_cnt_rate2']
 
 #spa_w2v_cos_similar 余弦相似度
-feature = ['spa_str_edit_similar','spa_w2v_manha_similar','spa_w2v_cos_similar', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
+feature = ['spa_str_edit_similar','spa_w2v_cos_similar','spa_w2v_manha_similar','spa_w2v_similar', 'seq_len_1', 'seq_len_2', 'seq_len_cha','jiaoji_cnt','jiaoji_cnt_rate1','jiaoji_cnt_rate2','jiaoji_cnt_rate_char']
 #feature = ['spa_w2v_cos_similar']
 train = data[data['label']!=-1]
 test = data[data['label']==-1]
@@ -201,8 +200,8 @@ for i in tt:
 	s = s + i
 #s = s /5
 
-test['label'] = list(s)
-print (result)
+test['label'] = s
+
 print (np.mean(result))
 print (len(test))
 
