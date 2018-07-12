@@ -5,6 +5,9 @@ from sklearn.model_selection import train_test_split
 import lightgbm as lgb
 from sklearn.metrics import log_loss
 import math
+from nltk.corpus import wordnet as wn
+from sklearn.preprocessing import MinMaxScaler, Imputer
+from scipy import stats
 from lightgbm import LGBMClassifier,LGBMRegressor
 from scipy.stats import pearsonr
 # [('spa_w2v_manha_similar', -0.15783060354009604)
@@ -154,6 +157,35 @@ def Edit_distance_str(str1, str2):
    similarity = 1-(edit_distance_distance/max(len(str1), len(str2)))
    #return {'Distance': edit_distance_distance, 'Similarity': similarity}
    return similarity
+def wn_similar(data):
+	return data['eng_qura1','eng_qura2','label']
+def wn_test(wordsList,simScore):
+	predScoreList=np.zeros( (len(simScore),1) )
+	for i, (word1, word2) in enumerate(wordsList):
+		count=0
+		synsets1=wn.synsets(word1)
+		synsets2=wn.synsets(word2)
+		for synset1 in synsets1:
+			for synset2 in synsets2:
+				score=synset1.path_similarity(synset2)
+				if score is not None:
+					predScoreList[i,0]+=score
+					count+=1
+				else:
+					print (synset1,"path_similarity", synset2, "is None", "=="*10)
+		predScoreList[i,0]=predScoreList[i,0]*1.0/count
+	imp=Imputer(missing_values='NaN', strategy='mean', axis=0)
+	impList=imp.fit_transform(predScoreList)
+	mms=MinMaxScaler(feature_range=(0.0,10.0))
+	impMmsList=mms.fit_transform(impList)
+	#max(impMmsList)=array([ 10.])    min(impMmsList)=array([ 0.])
+	#impMmsList.mean()=0.74249450173161169
+
+	(coef1, pvalue)=stats.spearmanr(simScore, impMmsList)
+	#(correlation=0.3136469783526708, pvalue=1.6943792485183932e-09)
+
+	submitData=np.hstack( (wordsList, simScore, impMmsList) )
+	return submitData[3]
 #print(data.apply(w2v_similar, axis = 1))
 #axis=0表述列
 #axis=1表述行
