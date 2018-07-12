@@ -1,0 +1,10 @@
+?No he podido pagar con mi tarjeta, que debo hacer?	I have not been able to pay with my card, what should I do?	No puedo pagar mi pedido con mi tarjeta.	I can not pay for my order with my card.	1
+?Por qué aparece "no pagado" cuando el pago ya ha sido deducido en mi tarjeta?	Why does it appear "not paid" when the payment has already been deducted on my card?	He pagado por transferencia bancaria, pero el pago no ha sido recibido.	I paid by bank transfer, but the payment has not been received.	0
+?Cuándo recibiré mi reembolso si pago con tarjeta de crédito?	When will I receive my refund if I pay by credit card?	¿Cuándo recibiré el reembolso si cancelo mi pedido?	When will I receive the refund if I cancel my order?	0
+?Qué pasará después de abrir una disputa?	What will happen after opening a dispute?	¿Qué pasará después de haber enviado mi solicitud de Servicio de Garantía?	What will happen after I have sent my Warranty Service request?	0
+El producto que he recibido no corresponde con la descripción. ?Qué puedo hacer?	The product I received does not correspond with the description. ?What I can do?	He recibido un producto que no funciona.	I received a product that does not work.	0
+?Por qué se ha cerrado mi pedido?	Why has my order closed?	¿Por qué mi pedido está cerrado por Pedido rechazado?	Why is my order closed by rejected Order?	0
+?Por qué no puedo realizar un pedido?	Why can not I place an order?	¿Puedo cancelar un pedido pagado por adelantado?	Can I cancel an order paid in advance?	0
+?Por qué mi pago está deducido incorrectamente?	Why is my payment incorrectly deducted?	¿Por qué mi pago está deducido incorrectamente?	Why is my payment incorrectly deducted?	1
+?Como puedo pagar con mi tarjeta de credito/debito?	How can I pay with my credit / debit card?	No puedo pagar mi pedido con tarjeta Visa de débito, ¿qué puedo hacer?	I can not pay for my order with a Visa debit card, what can I do?	0
+?Por qué mi pedido está en verificación tras el pago?	Why is my order in verification after payment?	¿En qué etapa está mi pedido?	At what stage is my order?	0
