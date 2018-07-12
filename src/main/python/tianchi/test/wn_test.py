@@ -13,8 +13,8 @@ from sklearn.preprocessing import MinMaxScaler, Imputer
 # y = wordnet.synsets('suggested')[0]
 #
 # print(x.path_similarity(y))
-
-data=pd.read_csv("combined.csv")
+#http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/
+data=pd.read_csv("/home/moon/Desktop/combined.csv")
 wordsList=np.array(data.iloc[:,[0,1]])
 simScore=np.array(data.iloc[:,[2]])
 
@@ -45,4 +45,5 @@ impMmsList=mms.fit_transform(impList)
 (coef1, pvalue)=stats.spearmanr(simScore, impMmsList)
 #(correlation=0.3136469783526708, pvalue=1.6943792485183932e-09)
 
-
+submitData=np.hstack( (wordsList, simScore, impMmsList) )
+(pd.DataFrame(submitData)).to_csv("/home/moon/work/wordnet.csv", index=False, header=["Word1","Word2","OriginSimilarity","PredSimilarity"])
