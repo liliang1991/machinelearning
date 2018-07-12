@@ -1,4 +1,4 @@
-from nltk.corpus import webtext as wn
+from nltk.corpus import wordnet as wn
 
 import pandas as pd
 
