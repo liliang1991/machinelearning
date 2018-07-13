@@ -119,6 +119,9 @@ print('train accuracy:', score[1]) # 训练集中的准确率
 score = model.evaluate([val_left, val_right], labels_val, verbose=0)
 print('Test score:', score[0])#测试集中的loss
 print('Test accuracy:', score[1]) #测试集中的准确率
-
-a = model.predict([val_left,val_right])
+testdata=[]
+testdata.append("aaaaa")
+testcompare=[]
+testcompare.append("bbbbb")
+a = model.predict([testdata,testcompare])
 print(a)
