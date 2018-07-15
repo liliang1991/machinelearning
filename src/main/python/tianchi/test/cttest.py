@@ -7,13 +7,17 @@ from keras.preprocessing.sequence import pad_sequences
 from gensim.models import Word2Vec
 import numpy as np
 from keras.preprocessing.text import Tokenizer
-MAX_SEQUENCE_LENGTH = 200
+MAX_SEQUENCE_LENGTH = 30
 MAX_NB_WORDS = 200000
 VALIDATION_SPLIT = 0.5
 EMBEDDING_DIM = 200
 spa = pd.read_csv('/home/moon/work/tianchi/data/train.txt', sep = '\t', header = None)
 spa.columns = ['spa_qura1', 'eng_qura1', 'spa_qura2', 'eng_qura2', 'label']
 data=spa[['spa_qura1','spa_qura2','label']]
+data['spa_qura_list_1'] = data['spa_qura1'].apply(lambda x : x.split(' '))
+data['spa_qura_list_2'] = data['spa_qura2'].apply(lambda x : x.split(' '))
+spa_list = list(data['spa_qura_list_1'])
+spa_list.extend(list(data['spa_qura_list_2']))
 # for row in data.rows:
 #     print(row['spa_qura1'])
 #data['spa_qura_list_1'] = data['spa_qura1'].apply(lambda x : x.split(' '))
@@ -23,6 +27,7 @@ train_right = []
 embeddings_index = {}
 texts = []
 tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
+
 def _map(data):
     for index, row in data.iterrows():   # 获取每行的index、row
         texts.append(row['spa_qura1'])
@@ -30,15 +35,20 @@ def _map(data):
         labels.append(row['label'])
         train_left.append(row['spa_qura1'])
         train_right.append(row['spa_qura2'])
+
+model = Word2Vec(spa_list, sg=1, size=200,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=8)
+
 _map(data)
 
 tokenizer.fit_on_texts(texts)
 #print(data['spa_qura1'])
+#将多个文档转换为word下标的向量形式,shape为[len(texts)，len(text)]
 sequences_left = tokenizer.texts_to_sequences(train_left)
 sequences_right = tokenizer.texts_to_sequences(train_right)
 
 
 word_index = tokenizer.word_index
+#为了实现的简便，keras只能接受长度相同的序列输入。因此如果目前序列长度参差不齐，这时需要使用pad_sequences()。该函数是将序列转化为经过填充以后的一个新序列
 data_left = pad_sequences(sequences_left, maxlen=MAX_SEQUENCE_LENGTH,padding='pre', truncating='post')
 data_right = pad_sequences(sequences_right, maxlen=MAX_SEQUENCE_LENGTH,padding='pre', truncating='post')
 labels = np.array(labels)
@@ -57,22 +67,39 @@ val_right = data_right[-nb_validation_samples:]
 
 labels_train = labels[-nb_validation_samples:]
 labels_val = labels[-nb_validation_samples:]
-nb_words = min(MAX_NB_WORDS, len(word_index))
+
+dict={}
+j=0
+for i, val in enumerate(spa_list):
+    for index in range(len(val)):
+        if val[index] in dict.keys():
+            j+=1
+            print(j)
+            dict[val[index]]=j
+nb_words = min(MAX_NB_WORDS, len(dict))
+words=[]
+def seq_to_w2v(seq, model):
+    default = [0 for x in range(200)]
+    for i in range(200):
+        if i < len(seq):
+            words.extend(model[seq[i]])
+        else:
+            words.extend(default)
+data['spa_qura_list_1'].apply(lambda x : seq_to_w2v(x, model))
+data['spa_qura_list_2'].apply(lambda x : seq_to_w2v(x, model))
+
 embedding_matrix = np.zeros((nb_words + 1, EMBEDDING_DIM))
-for word, i in word_index.items():
+for word, i in dict.items():
     if i > MAX_NB_WORDS:
         continue
-    embedding_vector = embeddings_index.get(word)
+    embedding_vector = model[word]
     if embedding_vector is not None:
         # words not found in embedding index will be all-zeros.
+        print(i)
         embedding_matrix[i] = embedding_vector #
 
 
-embedding_layer = Embedding(nb_words + 1,
-                            EMBEDDING_DIM,
-                            input_length=MAX_SEQUENCE_LENGTH,
-                            weights=[embedding_matrix],
-                            trainable=True)
+
 
 tweet_a = Input(shape=(MAX_SEQUENCE_LENGTH,))
 tweet_b = Input(shape=(MAX_SEQUENCE_LENGTH,))
@@ -108,6 +135,7 @@ model.compile(optimizer='rmsprop',
 # 下面是训练程序
 
 model.fit([input_train_left,input_train_right], labels_train, nb_epoch=5)
+
 #print(model.fit([input_train_left,input_train_right], labels_train, nb_epoch=5))
 json_string = model.to_json()  # json_string = model.get_config()
 open('my_model_architecture.json','w').write(json_string)
@@ -116,12 +144,33 @@ model.save_weights('my_model_weights.h5')
 score = model.evaluate([input_train_left,input_train_right], labels_train, verbose=0)
 print('train score:', score[0]) # 训练集中的loss
 print('train accuracy:', score[1]) # 训练集中的准确率
-score = model.evaluate([val_left, val_right], labels_val, verbose=0)
-print('Test score:', score[0])#测试集中的loss
-print('Test accuracy:', score[1]) #测试集中的准确率
-testdata=[]
-testdata.append("aaaaa")
-testcompare=[]
-testcompare.append("bbbbb")
-a = model.predict([testdata,testcompare])
-print(a)
+
+test= pd.read_csv('/home/moon/work/tianchi/data/text.txt', sep = '\t', header = None)
+test.columns = ['test_spa_qura1','test_spa_qura2']
+datatest=test[['test_spa_qura1','test_spa_qura2']]
+test_left=[]
+test_right=[]
+for index, row in datatest.iterrows():   # 获取每行的index、row
+    test_left.append(row['test_spa_qura1'])
+    test_right.append(row['test_spa_qura2'])
+    test_sequences_left = tokenizer.texts_to_sequences(test_left)
+    test_sequences_right = tokenizer.texts_to_sequences(test_right)
+
+
+word_index = tokenizer.word_index
+test_data_left = pad_sequences(test_sequences_left, maxlen=MAX_SEQUENCE_LENGTH,padding='pre', truncating='post')
+test_data_right = pad_sequences(test_sequences_right, maxlen=MAX_SEQUENCE_LENGTH,padding='pre', truncating='post')
+
+    #labels = labels[0]
+
+test_val_left = test_data_left[-nb_validation_samples:]
+test_val_right = test_data_right[-nb_validation_samples:]
+prediction = model.predict([test_data_left,test_data_right])
+print("模型预测结果",prediction)
+
+# testdata=[]
+# testdata.append("aaaaa")
+# testcompare=[]
+# testcompare.append("bbbbb")
+# a = model.predict([testdata,testcompare])
+# print(a)
