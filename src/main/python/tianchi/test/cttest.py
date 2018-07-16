@@ -11,13 +11,27 @@ MAX_SEQUENCE_LENGTH = 30
 MAX_NB_WORDS = 200000
 VALIDATION_SPLIT = 0.2
 EMBEDDING_DIM = 200
-spa = pd.read_csv('/home/moon/work/tianchi/data/train.txt', sep = '\t', header = None)
+
+english_spa=pd.read_csv('/home/moon/work/tianchi/data/cikm_english_train_20180516.txt', sep = '\t', header = None)
+english_spa.columns = ['eng_qura1', 'spa_qura1', 'eng_qura2', 'spa_qura2', 'label']
+
+spa = pd.read_csv('/home/moon/work/tianchi/data/cikm_spanish_train_20180516.txt', sep = '\t', header = None)
 spa.columns = ['spa_qura1', 'eng_qura1', 'spa_qura2', 'eng_qura2', 'label']
-data=spa[['spa_qura1','spa_qura2','label']]
+datacol=spa[['spa_qura1','spa_qura2','label']]
+
+
+
+#test= pd.read_csv('/home/moon/work/tianchi/data/train.txt', sep = '\t', header = None)
+
+
+data = pd.concat([english_spa[datacol.columns], spa[datacol.columns]]).reset_index()
+
+
 data['spa_qura_list_1'] = data['spa_qura1'].apply(lambda x : x.split(' '))
 data['spa_qura_list_2'] = data['spa_qura2'].apply(lambda x : x.split(' '))
 spa_list = list(data['spa_qura_list_1'])
 spa_list.extend(list(data['spa_qura_list_2']))
+
 # for row in data.rows:
 #     print(row['spa_qura1'])
 #data['spa_qura_list_1'] = data['spa_qura1'].apply(lambda x : x.split(' '))
@@ -76,11 +90,9 @@ for i, val in enumerate(spa_list):
     for index in range(len(val)):
         if val[index] not in dict.keys():
             j+=1
-            print(j)
             dict[val[index]]=j
 nb_words = min(MAX_NB_WORDS, len(dict))
-print(len(dict))
-print(str(nb_words)+"=====nbwords")
+
 words=[]
 def seq_to_w2v(seq, model):
     default = [0 for x in range(200)]
@@ -148,9 +160,10 @@ score = model.evaluate([input_train_left,input_train_right], labels_train, verbo
 print('train score:', score[0]) # 训练集中的loss
 print('train accuracy:', score[1]) # 训练集中的准确率
 
-test= pd.read_csv('/home/moon/work/tianchi/data/text.txt', sep = '\t', header = None)
+test= pd.read_csv('/home/moon/work/tianchi/data/cikm_test_a_20180516.txt', sep = '\t', header = None)
 test.columns = ['test_spa_qura1','test_spa_qura2']
 datatest=test[['test_spa_qura1','test_spa_qura2']]
+
 test_left=[]
 test_right=[]
 for index, row in datatest.iterrows():   # 获取每行的index、row
@@ -169,8 +182,14 @@ test_data_right = pad_sequences(test_sequences_right, maxlen=MAX_SEQUENCE_LENGTH
 test_val_left = test_data_left[-nb_validation_samples:]
 test_val_right = test_data_right[-nb_validation_samples:]
 prediction = model.predict([test_data_left,test_data_right])
-print("模型预测结果",prediction)
-
+result=[]
+for element in prediction.flat:
+    result.append(element)
+#np.savetxt("/home/moon/work/tianchi/data/result1.txt", prediction.flat)
+file=open('/home/moon/work/tianchi/data/result1.txt','w')
+for line in result:
+    file.write(str(line)+'\n')
+file.close()
 # testdata=[]
 # testdata.append("aaaaa")
 # testcompare=[]
