@@ -46,17 +46,18 @@ def _map(data):
     for index, row in data.iterrows():   # 获取每行的index、row
         texts.append(row['spa_qura1'])
         texts.append(row['spa_qura2'])
-        labels.append(float(row['label']))
+        labels.append(row['label'])
         train_left.append(row['spa_qura1'])
         train_right.append(row['spa_qura2'])
 
-model = Word2Vec(spa_list, sg=1, size=200,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=8)
+model = Word2Vec(spa_list, sg=1, size=30,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=8)
+
 
 _map(data)
+tokenizer.fit_on_texts(texts)
 print('Found %s left.' % len(train_left))
 print('Found %s right.' % len(train_right))
 print('Found %s labels.' % len(labels))
-tokenizer.fit_on_texts(texts)
 #print(data['spa_qura1'])
 #将多个文档转换为word下标的向量形式,shape为[len(texts)，len(text)]
 sequences_left = tokenizer.texts_to_sequences(train_left)
