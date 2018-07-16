@@ -9,7 +9,7 @@ import numpy as np
 from keras.preprocessing.text import Tokenizer
 MAX_SEQUENCE_LENGTH = 30
 MAX_NB_WORDS = 200000
-VALIDATION_SPLIT = 0.5
+VALIDATION_SPLIT = 0.2
 EMBEDDING_DIM = 200
 spa = pd.read_csv('/home/moon/work/tianchi/data/train.txt', sep = '\t', header = None)
 spa.columns = ['spa_qura1', 'eng_qura1', 'spa_qura2', 'eng_qura2', 'label']
@@ -32,14 +32,16 @@ def _map(data):
     for index, row in data.iterrows():   # 获取每行的index、row
         texts.append(row['spa_qura1'])
         texts.append(row['spa_qura2'])
-        labels.append(row['label'])
+        labels.append(float(row['label']))
         train_left.append(row['spa_qura1'])
         train_right.append(row['spa_qura2'])
 
 model = Word2Vec(spa_list, sg=1, size=200,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=8)
 
 _map(data)
-
+print('Found %s left.' % len(train_left))
+print('Found %s right.' % len(train_right))
+print('Found %s labels.' % len(labels))
 tokenizer.fit_on_texts(texts)
 #print(data['spa_qura1'])
 #将多个文档转换为word下标的向量形式,shape为[len(texts)，len(text)]
@@ -65,18 +67,20 @@ input_train_right = data_right[:-nb_validation_samples]
 val_left = data_left[-nb_validation_samples:]
 val_right = data_right[-nb_validation_samples:]
 
-labels_train = labels[-nb_validation_samples:]
+labels_train = labels[:-nb_validation_samples]
 labels_val = labels[-nb_validation_samples:]
 
 dict={}
 j=0
 for i, val in enumerate(spa_list):
     for index in range(len(val)):
-        if val[index] in dict.keys():
+        if val[index] not in dict.keys():
             j+=1
             print(j)
             dict[val[index]]=j
 nb_words = min(MAX_NB_WORDS, len(dict))
+print(len(dict))
+print(str(nb_words)+"=====nbwords")
 words=[]
 def seq_to_w2v(seq, model):
     default = [0 for x in range(200)]
