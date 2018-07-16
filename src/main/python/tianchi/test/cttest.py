@@ -99,7 +99,6 @@ for word, i in dict.items():
     embedding_vector = model[word]
     if embedding_vector is not None:
         # words not found in embedding index will be all-zeros.
-        print(i)
         embedding_matrix[i] = embedding_vector #
 
 
