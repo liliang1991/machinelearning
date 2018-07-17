@@ -50,7 +50,7 @@ def _map(data):
         train_left.append(row['spa_qura1'])
         train_right.append(row['spa_qura2'])
 
-model = Word2Vec(spa_list, sg=1, size=30,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=8)
+model = Word2Vec(spa_list, sg=1, size=30,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=4)
 
 
 _map(data)
@@ -62,9 +62,9 @@ print('Found %s labels.' % len(labels))
 #将多个文档转换为word下标的向量形式,shape为[len(texts)，len(text)]
 sequences_left = tokenizer.texts_to_sequences(train_left)
 sequences_right = tokenizer.texts_to_sequences(train_right)
+texts.clear()
+data.drop(data.index,inplace=True)
 
-
-word_index = tokenizer.word_index
 #为了实现的简便，keras只能接受长度相同的序列输入。因此如果目前序列长度参差不齐，这时需要使用pad_sequences()。该函数是将序列转化为经过填充以后的一个新序列
 data_left = pad_sequences(sequences_left, maxlen=MAX_SEQUENCE_LENGTH,padding='pre', truncating='post')
 data_right = pad_sequences(sequences_right, maxlen=MAX_SEQUENCE_LENGTH,padding='pre', truncating='post')
@@ -87,11 +87,14 @@ labels_val = labels[-nb_validation_samples:]
 
 dict={}
 j=0
+print("添加map")
 for i, val in enumerate(spa_list):
     for index in range(len(val)):
         if val[index] not in dict.keys():
             j+=1
             dict[val[index]]=j
+print("添加ｍap 后")
+spa_list.clear()
 nb_words = min(MAX_NB_WORDS, len(dict))
 
 words=[]
@@ -112,11 +115,12 @@ for word, i in dict.items():
     embedding_vector = model[word]
     if embedding_vector is not None:
         # words not found in embedding index will be all-zeros.
-        embedding_matrix[i] = embedding_vector #
+        print(i)
+        embedding_matrix[i] = embedding_vector
 
 
 
-
+dict.clear()
 tweet_a = Input(shape=(MAX_SEQUENCE_LENGTH,))
 tweet_b = Input(shape=(MAX_SEQUENCE_LENGTH,))
 tweet_input = Input(shape=(MAX_SEQUENCE_LENGTH,))
