@@ -50,7 +50,7 @@ def _map(data):
         train_left.append(row['spa_qura1'])
         train_right.append(row['spa_qura2'])
 
-model = Word2Vec(spa_list, sg=1, size=30,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=4)
+model = Word2Vec(spa_list, sg=1, size=200,  window=5,  min_count=1,  negative=3, sample=0.001, hs=1, workers=4)
 
 
 _map(data)
