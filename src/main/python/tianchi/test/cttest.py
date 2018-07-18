@@ -115,7 +115,6 @@ for word, i in dict.items():
     embedding_vector = model[word]
     if embedding_vector is not None:
         # words not found in embedding index will be all-zeros.
-        print(i)
         embedding_matrix[i] = embedding_vector
 
 
@@ -149,7 +148,7 @@ predictions = Dense(1, activation='sigmoid')(dense_3)
 
 
 model = mod(input=[tweet_a, tweet_b], output=predictions)
-model.compile(optimizer='rmsprop',
+model.compile(optimizer='Adam',
               loss='binary_crossentropy',
               metrics=['accuracy'])
 # 下面是训练程序
