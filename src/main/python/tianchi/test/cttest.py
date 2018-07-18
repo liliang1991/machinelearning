@@ -1,6 +1,7 @@
 import keras
 import pandas as pd
 from keras import Model as mod
+from keras import optimizers
 from keras.utils.np_utils import to_categorical
 from keras.layers import Input, LSTM, Dense, merge, Conv1D, MaxPooling1D, Flatten, Embedding, Dropout
 from keras.preprocessing.sequence import pad_sequences
@@ -148,9 +149,11 @@ predictions = Dense(1, activation='sigmoid')(dense_3)
 
 
 model = mod(input=[tweet_a, tweet_b], output=predictions)
+#keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 model.compile(optimizer='Adam',
               loss='binary_crossentropy',
               metrics=['accuracy'])
+optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 # 下面是训练程序
 
 model.fit([input_train_left,input_train_right], labels_train, nb_epoch=5)
