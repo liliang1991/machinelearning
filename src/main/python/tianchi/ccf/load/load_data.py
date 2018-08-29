@@ -1,6 +1,13 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from datetime import date
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import SGDClassifier, LogisticRegression
+from sklearn.model_selection import KFold, train_test_split, StratifiedKFold, cross_val_score, GridSearchCV
+from sklearn.preprocessing import StandardScaler
+import os, sys, pickle
 dfon=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_online_stage1_train.csv",keep_default_na=False)
 dfoff=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_offline_stage1_train.csv",keep_default_na=False)
 dftest=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_offline_stage1_test_revised.csv",keep_default_na=False)
@@ -94,6 +101,79 @@ plt.legend()
 plt.subplot(212)
 plt.bar(date_received_dt,buybydate['count']/couponbydate['count'])
 plt.ylabel('Ratio(coupon used/coupon received)')
-plt.show()
+#plt.show()
 plt.tight_layout()
 print('输出完成')
+
+#新建星期特征
+def getWeekday(row):
+    if row=='null':
+        return 'null'
+    else:
+        return date(int(row[0:4]), int(row[4:6]), int(row[6:8])).weekday() + 1
+dfoff['weekday'] = dfoff['Date_received'].astype(str).apply(getWeekday)
+dftest['weekday'] = dftest['Date_received'].astype(str).apply(getWeekday)
+# weekday_type :  周六和周日为1，其他为0
+dfoff['weekday_type'] = dfoff['weekday'].apply(lambda x : 1 if x in [6,7] else 0 )
+dftest['weekday_type'] = dftest['weekday'].apply(lambda x : 1 if x in [6,7] else 0 )
+
+#将工作日更改为一个热编码
+#['weekday_1', 'weekday_2', 'weekday_3', 'weekday_4', 'weekday_5', 'weekday_6', 'weekday_7']
+weekdaycols = ['weekday_' + str(i) for i in range(1,8)]
+#取离散值，是星期几就取下标几
+tmpdf = pd.get_dummies(dfoff['weekday'].replace('null', np.nan))
+
+tmpdf.columns = weekdaycols
+dfoff[weekdaycols] = tmpdf
+
+#测试集
+tmpdf = pd.get_dummies(dftest['weekday'].replace('null', np.nan))
+tmpdf.columns = weekdaycols
+dftest[weekdaycols] = tmpdf
+
+#数据标注
+def label(row):
+    if row['Date_received']=='null':
+        return -1
+    elif row['Date']!='null':
+        td=pd.to_datetime(row['Date'], format='%Y%m%d')-pd.to_datetime(row['Date_received'], format='%Y%m%d')
+        if td<=pd.Timedelta(15,'D'):
+            return 1
+    else:
+        return 0
+dfoff['label'] = dfoff.apply(label, axis = 1)
+print(dfoff['label'].value_counts())
+
+
+
+#切分数据(领取优惠券)
+df = dfoff[dfoff['label'] != -1].copy()
+train=df[df['Date_received']<'20160516'].copy()
+valid=df[(df['Date_received']>='20160516')&(df['Date_received']<='20160615')].copy()
+print(train['label'].value_counts())
+print(valid['label'].value_counts())
+
+original_feature = ['discount_rate','discount_type','discount_man', 'discount_jian','distance', 'weekday', 'weekday_type'] + weekdaycols
+
+# model1
+predictors = original_feature
+def check_model(data,predictors):
+    classifier=lambda:SGDClassifier(loss='log',penalty='elasticnet',fit_intercept=True,max_iter=100,shuffle=True,n_jobs=1,class_weight=None)
+    model=Pipeline(steps=[('ss',StandardScaler()),('en',classifier)])
+    params={
+        'en__alpha': [ 0.001, 0.01, 0.1],
+        'en__l1_ratio': [ 0.001, 0.01, 0.1]
+    }
+    folder=StratifiedKFold(n_splits=3,shuffle=True)
+    grid_search=GridSearchCV(model,params,cv=folder,n_jobs=-1,verbose=1)
+    grid_search=grid_search.fit(data[predictors],data['label'])
+    return grid_search
+if not os.path.isfile('1_model.pk1'):
+    model=check_model(train,predictors)
+    print(model.best_score_)
+    print(model.best_params_)
+    with open('1_model.pk1','wb') as f:
+        pickle.dump(model,f)
+else:
+    with open('1_model.pk1','rb') as f:
+        model=pickle.load(f)
