@@ -8,6 +8,8 @@ from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.model_selection import KFold, train_test_split, StratifiedKFold, cross_val_score, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 import os, sys, pickle
+import math
+from sklearn.metrics import log_loss, roc_auc_score, auc, roc_curve
 dfon=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_online_stage1_train.csv",keep_default_na=False)
 dfoff=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_offline_stage1_train.csv",keep_default_na=False)
 dftest=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_offline_stage1_test_revised.csv",keep_default_na=False)
@@ -64,6 +66,7 @@ def processData(df):
     df['distance'] = df['Distance'].replace('null', -1).astype(int)
     return df
 dfoff = processData(dfoff)
+dftest = processData(dftest)
 
 #优惠时间和消费时间去重排序
 #领取优惠券时间
@@ -139,8 +142,7 @@ def label(row):
         td=pd.to_datetime(row['Date'], format='%Y%m%d')-pd.to_datetime(row['Date_received'], format='%Y%m%d')
         if td<=pd.Timedelta(15,'D'):
             return 1
-    else:
-        return 0
+    return 0
 dfoff['label'] = dfoff.apply(label, axis = 1)
 print(dfoff['label'].value_counts())
 
@@ -155,11 +157,11 @@ print(valid['label'].value_counts())
 
 original_feature = ['discount_rate','discount_type','discount_man', 'discount_jian','distance', 'weekday', 'weekday_type'] + weekdaycols
 
-# model1
+# model
 predictors = original_feature
 def check_model(data,predictors):
     classifier=lambda:SGDClassifier(loss='log',penalty='elasticnet',fit_intercept=True,max_iter=100,shuffle=True,n_jobs=1,class_weight=None)
-    model=Pipeline(steps=[('ss',StandardScaler()),('en',classifier)])
+    model=Pipeline(steps=[('ss',StandardScaler()),('en',classifier())])
     params={
         'en__alpha': [ 0.001, 0.01, 0.1],
         'en__l1_ratio': [ 0.001, 0.01, 0.1]
@@ -169,6 +171,7 @@ def check_model(data,predictors):
     grid_search=grid_search.fit(data[predictors],data['label'])
     return grid_search
 if not os.path.isfile('1_model.pk1'):
+    train.dropna(inplace=True)
     model=check_model(train,predictors)
     print(model.best_score_)
     print(model.best_params_)
@@ -177,3 +180,28 @@ if not os.path.isfile('1_model.pk1'):
 else:
     with open('1_model.pk1','rb') as f:
         model=pickle.load(f)
+
+#预测以及结果评价
+y_valid_pred = model.predict_proba(valid[predictors])
+valid1 = valid.copy()
+valid1['pred_prob'] = y_valid_pred[:, 1]
+valid1.head(2)
+
+# avgAUC calculation
+vg = valid1.groupby(['Coupon_id'])
+aucs = []
+for i in vg:
+    tmpdf = i[1]
+    if len(tmpdf['label'].unique()) != 2:
+        continue
+    fpr, tpr, thresholds = roc_curve(tmpdf['label'], tmpdf['pred_prob'], pos_label=1)
+    aucs.append(auc(fpr, tpr))
+print(np.average(aucs))
+
+# test prediction
+y_test_pred=model.predict_proba(dftest[predictors])
+dftest1=dftest[['User_id','Coupon_id','Date_received']].copy()
+#获取第一位
+dftest1['label']=y_test_pred[:,1]
+dftest1.to_csv('submit1.csv', index=False, header=False)
+dftest1.head()
