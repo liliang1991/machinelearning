@@ -160,6 +160,12 @@ original_feature = ['discount_rate','discount_type','discount_man', 'discount_ji
 # model
 predictors = original_feature
 def check_model(data,predictors):
+    #，该损失函数同样可以通过梯度下降算法来求解参数。下面是SGDClassifier的基本使用方法
+    #loss	损失函数选择项，字符串型；默认为’hinge’即SVM；’log’为逻辑回归
+    #penalty	惩罚方式,字符串型；默认为’l2’;其余有’none’,’l1’,’elasticnet’
+    #alpha	惩罚参数,浮点型；默认值为0.0001
+    #n_iter	迭代次数，整数型；默认值为5
+    #learning_rate	学习速率，字符串型；默认值为’optimal’，根据alpha计算得到
     classifier=lambda:SGDClassifier(loss='log',penalty='elasticnet',fit_intercept=True,max_iter=100,shuffle=True,n_jobs=1,class_weight=None)
     model=Pipeline(steps=[('ss',StandardScaler()),('en',classifier())])
     params={
