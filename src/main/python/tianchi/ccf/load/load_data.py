@@ -134,7 +134,7 @@ tmpdf = pd.get_dummies(dftest['weekday'].replace('null', np.nan))
 tmpdf.columns = weekdaycols
 dftest[weekdaycols] = tmpdf
 
-#数据标注
+#数据标注,获取label 没有领取优惠券的为-1 ,消费日期减去领取优惠券日期小于１５天的为１　否则为０
 def label(row):
     if row['Date_received']=='null':
         return -1
@@ -215,9 +215,21 @@ for i in vg:
 print(np.average(aucs))
 
 # test prediction
+# predict返回的是一个大小为n的一维数组，一维数组中的第i个值为模型预测第i个预测样本的标签；
+
+#为０和为１分别的概率
 y_test_pred=model.predict_proba(dftest[predictors])
 dftest1=dftest[['User_id','Coupon_id','Date_received']].copy()
 #获取第一位
 dftest1['label']=y_test_pred[:,1]
 dftest1.to_csv('submit1.csv', index=False, header=False)
 dftest1.head(2)
+
+
+#特征提取 通过客户和商户以前的买卖情况，提取各自或者交叉的特征
+feature=dfoff[(dfoff['Date']<'20160o516')|(dfoff['Date']=='null')&(dfoff['Date_received']<'20160516')].copy()
+data=dfoff[(dfoff['Date_received']>='20160516')&(dfoff['Date_received']<='20160615')].copy()
+
+fdf = feature.copy()
+#用户userid 特征
+u=fdf[['User_id']].copy().drop_duplicates()
