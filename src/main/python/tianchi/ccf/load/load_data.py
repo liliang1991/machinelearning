@@ -88,7 +88,7 @@ couponbydate.columns = ['Date_received','count']
 buybydate=dfoff[(dfoff['Date_received']!='null')&(dfoff['Date']!='null')][['Date_received', 'Date']].groupby(['Date_received'],as_index=False).count()
 buybydate.columns = ['Date_received','count']
 
-#output
+#output 画图
 sns.set_style('ticks')
 sns.set_context("notebook", font_scale= 1.4)
 plt.figure(figsize=(12,8))
@@ -160,6 +160,8 @@ original_feature = ['discount_rate','discount_type','discount_man', 'discount_ji
 # model
 predictors = original_feature
 def check_model(data,predictors):
+    #SGDClassifier是一个用随机梯度下降算法训练的线性分类器的集合
+
     #，该损失函数同样可以通过梯度下降算法来求解参数。下面是SGDClassifier的基本使用方法
     #loss	损失函数选择项，字符串型；默认为’hinge’即SVM；’log’为逻辑回归
     #penalty	惩罚方式,字符串型；默认为’l2’;其余有’none’,’l1’,’elasticnet’
@@ -167,12 +169,18 @@ def check_model(data,predictors):
     #n_iter	迭代次数，整数型；默认值为5
     #learning_rate	学习速率，字符串型；默认值为’optimal’，根据alpha计算得到
     classifier=lambda:SGDClassifier(loss='log',penalty='elasticnet',fit_intercept=True,max_iter=100,shuffle=True,n_jobs=1,class_weight=None)
+    #StandardScaler 平均值和标准偏差
+    #
     model=Pipeline(steps=[('ss',StandardScaler()),('en',classifier())])
     params={
         'en__alpha': [ 0.001, 0.01, 0.1],
         'en__l1_ratio': [ 0.001, 0.01, 0.1]
     }
+    #分割数据
+    #确保训练集，测试集中各类别样本的比例与原始数据集中相同
+    #k-折交叉验证
     folder=StratifiedKFold(n_splits=3,shuffle=True)
+    #调整估计器的超参数
     grid_search=GridSearchCV(model,params,cv=folder,n_jobs=-1,verbose=1)
     grid_search=grid_search.fit(data[predictors],data['label'])
     return grid_search
@@ -187,9 +195,10 @@ else:
     with open('1_model.pk1','rb') as f:
         model=pickle.load(f)
 
-#预测以及结果评价
+#预测以及结果评价(预测是０还是１的几率)
 y_valid_pred = model.predict_proba(valid[predictors])
 valid1 = valid.copy()
+#获取第一个元素
 valid1['pred_prob'] = y_valid_pred[:, 1]
 valid1.head(2)
 
@@ -202,6 +211,7 @@ for i in vg:
         continue
     fpr, tpr, thresholds = roc_curve(tmpdf['label'], tmpdf['pred_prob'], pos_label=1)
     aucs.append(auc(fpr, tpr))
+#计算加权平均数
 print(np.average(aucs))
 
 # test prediction
@@ -210,4 +220,4 @@ dftest1=dftest[['User_id','Coupon_id','Date_received']].copy()
 #获取第一位
 dftest1['label']=y_test_pred[:,1]
 dftest1.to_csv('submit1.csv', index=False, header=False)
-dftest1.head()
+dftest1.head(2)
