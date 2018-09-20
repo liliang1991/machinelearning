@@ -1,6 +1,4 @@
 #https://tianchi.aliyun.com/competition/introduction.htm?spm=5176.100066.0.0.6acd33afsWeJrz&raceId=231661
-#https://github.com/zqhZY/semanaly/blob/master/lstm/lstm.py
-#https://www.jianshu.com/p/a649b568e8fa
 import pandas as pd
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
@@ -8,6 +6,7 @@ from keras.layers import Dense, Input, LSTM, Embedding, Dropout
 from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.callbacks import EarlyStopping, ModelCheckpoint
+from gensim.models import Word2Vec
 import codecs
 import csv
 import numpy as np
@@ -15,7 +14,7 @@ from keras.models import Model
 #声明变量
 MAX_NB_WORDS = 200000
 MAX_SEQUENCE_LENGTH = 30
-EMBEDDING_DIM = 100
+EMBEDDING_DIM = 30
 #加载数据
 # 英语问句对  英语问句1，西班牙语翻译1，英语问句2，西班牙语翻译2，匹配标注。
 english_spa = pd.read_csv('/home/moon/work/tianchi/data/cikm_english_train_head.txt', sep = '\t', header = None)
@@ -25,7 +24,7 @@ print("Fit tokenizer...")
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS, lower=False)
 train_file="/home/moon/work/tianchi/data/cikm_english_train_20180516.txt"
 test_file="/home/moon/work/tianchi/data/cikm_test_a_20180516.txt"
-
+EMBEDDING_FILE = '/home/moon/work/workspace/ky/tensorlfow/src/main/python/tianchi/cikm/w2v.mod'
 texts_1 = []
 texts_2 = []
 labels = []
@@ -68,7 +67,12 @@ word_index = tokenizer.word_index
 nb_words = min(MAX_NB_WORDS, len(word_index)) + 1
 #embedding_matrix.shape (40, 100) 40个数组，每个１００个元素
 embedding_matrix = np.zeros((nb_words, EMBEDDING_DIM))
-
+word2vec = Word2Vec.load(EMBEDDING_FILE)
+for word, i in word_index.items():
+    if word in word2vec.wv.vocab:
+        embedding_matrix[i] = word2vec.wv.word_vec(word)
+    else:
+        print(word)
 #lstm 参数
 num_lstm = 175
 num_dense = 100
@@ -100,8 +104,9 @@ def get_model():
     preds = Dense(1, activation='sigmoid')(merged)
     model = Model(inputs=[sequence_1_input, sequence_2_input], \
                   outputs=preds)
+    #逻辑回归
     model.compile(loss='binary_crossentropy',
-                  optimizer='nadam',
+                  optimizer='adam',
                   metrics=['acc'])
     model.summary()
     #model.save("../model.txt")
@@ -118,7 +123,7 @@ def train_model():
 
     hist = model.fit([data_1, data_2], labels, \
                      validation_data=([data_1, data_2], labels), \
-                     epochs=100, batch_size=10, shuffle=True, callbacks=[early_stopping, model_checkpoint])
+                     epochs=2, batch_size=5000, shuffle=True, callbacks=[early_stopping, model_checkpoint])
 
     model.load_weights(bst_model_path)
     predicts = model.predict([test_data_1, test_data_2], batch_size=10, verbose=1)
