@@ -1,15 +1,15 @@
+#https://tianchi.aliyun.com/getStart/information.htm?spm=5176.11165291.5678.2.34ed57d2xYr01H&raceId=231593
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import date
 import numpy as np
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import SGDClassifier, LogisticRegression
-from sklearn.model_selection import KFold, train_test_split, StratifiedKFold, cross_val_score, GridSearchCV
+from sklearn.linear_model import SGDClassifier
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 from sklearn.preprocessing import StandardScaler
-import os, sys, pickle
-import math
-from sklearn.metrics import log_loss, roc_auc_score, auc, roc_curve
+import os, pickle
+from sklearn.metrics import  auc, roc_curve
 dfon=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_online_stage1_train.csv",keep_default_na=False)
 dfoff=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_offline_stage1_train.csv",keep_default_na=False)
 dftest=pd.read_csv("/home/moon/work/tianchi/ccf/data/ccf_offline_stage1_test_revised.csv",keep_default_na=False)
