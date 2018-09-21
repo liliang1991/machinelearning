@@ -224,12 +224,3 @@ dftest1=dftest[['User_id','Coupon_id','Date_received']].copy()
 dftest1['label']=y_test_pred[:,1]
 dftest1.to_csv('submit1.csv', index=False, header=False)
 dftest1.head(2)
-
-
-#特征提取 通过客户和商户以前的买卖情况，提取各自或者交叉的特征
-feature=dfoff[(dfoff['Date']<'20160o516')|(dfoff['Date']=='null')&(dfoff['Date_received']<'20160516')].copy()
-data=dfoff[(dfoff['Date_received']>='20160516')&(dfoff['Date_received']<='20160615')].copy()
-
-fdf = feature.copy()
-#用户userid 特征
-u=fdf[['User_id']].copy().drop_duplicates()
