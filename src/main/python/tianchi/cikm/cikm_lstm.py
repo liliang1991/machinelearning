@@ -130,6 +130,9 @@ def get_model():
     model = Model(inputs=[sequence_1_input, sequence_2_input], \
                   outputs=preds)
     #逻辑回归
+    #optimizer：优化器，为预定义优化器名或优化器对象，参考优化器
+    #loss：损失函数
+    #metrics：列表，包含评估模型在训练和测试时的性能的指标
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
                   metrics=['acc'])
