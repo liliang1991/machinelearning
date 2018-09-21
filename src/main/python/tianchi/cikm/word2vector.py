@@ -1,7 +1,7 @@
-import logging
-from gensim.models.word2vec import LineSentence, Word2Vec
-import sys
+from gensim.models.word2vec import Word2Vec
 import pandas as pd
+#训练词向量
+
 #加载数据
 # 英语问句对  英语问句1，西班牙语翻译1，英语问句2，西班牙语翻译2，匹配标注。
 english_spa = pd.read_csv('/home/moon/work/tianchi/data/cikm_english_train_20180516.txt', sep = '\t', header = None)

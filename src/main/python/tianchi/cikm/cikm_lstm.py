@@ -15,20 +15,18 @@ from keras.models import Model
 MAX_NB_WORDS = 200000
 MAX_SEQUENCE_LENGTH = 30
 EMBEDDING_DIM = 30
-#加载数据
-# 英语问句对  英语问句1，西班牙语翻译1，英语问句2，西班牙语翻译2，匹配标注。
-english_spa = pd.read_csv('/home/moon/work/tianchi/data/cikm_english_train_head.txt', sep = '\t', header = None)
-#西班牙问句对 西班牙语问句1，英语翻译1，西班牙语问句2，英语翻译2，匹配标注
-spa = pd.read_csv('/home/moon/work/tianchi/data/cikm_test_head_20180516.txt', sep = '\t', header = None)
+
 print("Fit tokenizer...")
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS, lower=False)
+# 英语问句对  英语问句1，西班牙语翻译1，英语问句2，西班牙语翻译2，匹配标注。
 train_file="/home/moon/work/tianchi/data/cikm_english_train_20180516.txt"
+#测试语句
 test_file="/home/moon/work/tianchi/data/cikm_test_a_20180516.txt"
 EMBEDDING_FILE = '/home/moon/work/workspace/ky/tensorlfow/src/main/python/tianchi/cikm/w2v.mod'
 texts_1 = []
 texts_2 = []
 labels = []
-
+#加载数据
 with codecs.open(train_file, encoding='utf-8') as f:
     reader = csv.reader(f, delimiter='\t')
     for values in reader:
@@ -79,25 +77,52 @@ num_dense = 100
 rate_drop_lstm = 0.15
 rate_drop_dense = 0.15
 act = 'relu'
+#步骤
+#1:嵌入层
+#嵌入层将正整数（下标）转换为具有固定大小的向量，如[[4],[20]]->[[0.25,0.1],[0.6,-0.2]]
+#Embedding层只能作为模型的第一层
+#2:lstm 层 经过lstm  　
+#3:融合层 concatenate
+#４:规范层 BatchNormalization
+#5:全连接层 Dense
 def get_model():
+    #参数
+    # １:input_dim：大或等于0的整数，字典长度，即输入数据最大下标+1
+    #2:output_dim：大于0的整数，代表全连接嵌入的维度
+    #3:weights初始化权重
+    #4:input_length当输入序列的长度固定时，该值为其长度。如果要在该层后接Flatten层，然后接Dense层，则必须指定该参数，否则Dense层的输出维度无法自动推断。
+    #5trainable 标记变量是否可训练
     embedding_layer = Embedding(nb_words,
                                 EMBEDDING_DIM,
                                 weights=[embedding_matrix],
                                 input_length=MAX_SEQUENCE_LENGTH,
                                 trainable=False)
+    #参数
+    #1:num_lstm　输出维度
+    #2:dropout　0~1之间的浮点数，控制输入线性变换的神经元断开比例
+    #3:recurrent_dropout 0~1之间的浮点数，控制循环状态的线性变换的神经元断开比例
     lstm_layer = LSTM(num_lstm, dropout=rate_drop_lstm, recurrent_dropout=rate_drop_lstm)
     sequence_1_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
     embedded_sequences_1 = embedding_layer(sequence_1_input)
     x1 = lstm_layer(embedded_sequences_1)
-
     sequence_2_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
     embedded_sequences_2 = embedding_layer(sequence_2_input)
     y1 = lstm_layer(embedded_sequences_2)
 
+    #在给定轴上将一个列表中的张量串联为一个张量
     merged = concatenate([x1, y1])
-    merged = Dropout(rate_drop_dense)(merged)
-    merged = BatchNormalization()(merged)
+   # 随机将x中一定比例的值设置为0，并放缩整个tensor
 
+    #参数：
+
+    #x：张量
+    #level：x中设置成0的元素比例
+    #seed：随机数种子
+    merged = Dropout(rate_drop_dense)(merged)
+    #该层在每个batch上将前一层的激活值重新规范化，即使得其输出数据的均值接近0，其标准差接近1
+    merged = BatchNormalization()(merged)
+   #num_dense 大于0的整数，代表该层的输出维度。
+    #activation 激活函数
     merged = Dense(num_dense, activation=act)(merged)
     merged = Dropout(rate_drop_dense)(merged)
     merged = BatchNormalization()(merged)
