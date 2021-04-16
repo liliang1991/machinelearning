@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from KMeans.kmeans import biKMeans
+from learning.KMeans.kmeans import biKMeans
 import pickle as pk
 
 if __name__ == '__main__':

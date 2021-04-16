@@ -2,7 +2,7 @@
 import pickle as pk
 import matplotlib.pyplot as plt
 import numpy as np
-from KMeans.kmeans import KMeans,biKMeans
+from learning.KMeans.kmeans import KMeans,biKMeans
 
 import sys
 
@@ -52,5 +52,5 @@ if __name__ == "__main__":
         #plt.close()
         num=num+1
         print(str(num))
-        plt.gcf().savefig("/Users/liliang/work/image/"+str(num)+".png", dpi=100)
+        #plt.gcf().savefig("/Users/liliang/work/image/"+str(num)+".png", dpi=100)
         plt.show()
