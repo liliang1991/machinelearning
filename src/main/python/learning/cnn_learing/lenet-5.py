@@ -3,7 +3,10 @@ import tensorboard
 import tensorflow as tf
 from tensorflow.keras import Sequential, layers, losses, optimizers, datasets
 import datetime
+
+import ssl
 if __name__ == '__main__':
+    ssl._create_default_https_context = ssl._create_unverified_context
     model=tf.keras.models.Sequential([
         tf.keras.layers.Conv2D(6,kernel_size=3,strides=1), # 第一个卷积层, 6个3x3卷积核
         tf.keras.layers.MaxPooling2D(pool_size=2,strides=2),# 高宽各减半的池化层
