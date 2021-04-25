@@ -8,6 +8,9 @@ import  os
 
 def VGG16():
     weight_decay = 5e-4
+    ##Sequential更准确的应该理解为堆叠，通过堆叠许多层，构建出深度神经网络。
+    #TODO 有时间仔细研究kernel_regularizer=regularizers.l2
+    ##kernel_regularizer=regularizers.l2  正则化是机器学习中通过显示的控制模型复杂度来避免模型过拟合、确保泛化能力的一种有效方式(https://blog.csdn.net/qq_37554556/article/details/111656750)
     model = models.Sequential()
     model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same', input_shape=(28, 28, 1), kernel_regularizer=regularizers.l2(weight_decay)))
     model.add(layers.Conv2D(64, (3, 3), activation='relu', padding='same', kernel_regularizer=regularizers.l2(weight_decay)))
