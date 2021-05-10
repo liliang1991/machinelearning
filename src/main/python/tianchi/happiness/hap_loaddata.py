@@ -8,9 +8,10 @@ import numpy as np
 import csv
 if __name__ == '__main__':
     data = pd.read_csv('./data/happiness_train_abbr.csv')
-    data.info()
     data = data.fillna(-1)
-
+    data['location']=data['province'].map(str)+data['city'].map(str)+data['county'].map(str)
+    data['location']=data['location'].astype("int")
+    #print(data['location'].head(10)).astype("int")
     fig, ax = plt.subplots(1,2,figsize=(15,5))
     numerical_features = [x for x in data.columns if data[x].dtype == np.float]
 
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     # sns.violinplot(x='Features', y='Values', hue='happiness',
     #                data=data, split=True, inner='quart', ax=ax[1], palette='happiness')
     # plt.show()
-    x_train, x_test, y_train, y_test = train_test_split(data[['province','income',
+    x_train, x_test, y_train, y_test = train_test_split(data[['location','income',
                                                               'house','marital','status_3_before','health','depression']],data['happiness'], test_size = 0.2, random_state = 2020)
     ## 定义 XGBoost模型
     model = XGBClassifier(colsample_bytree = 0.6, learning_rate = 0.3, max_depth= 8, subsample = 0.9)
@@ -75,11 +76,8 @@ if __name__ == '__main__':
                'house','marital','status_3_before','health','depression']];
 
 
-    data_test.info()
-    print(data_test.head(10))
     test_predict = model.predict(df)
 
-    print(len(test_predict))
     f = open('./data/res.csv','w',encoding='utf-8')
     csv_writer = csv.writer(f)
     csv_writer.writerow(['id','happiness'])
@@ -87,8 +85,6 @@ if __name__ == '__main__':
     for i in range(len(test_predict)):
         #f.write(str(data_test.iloc[i]['id'])+'\t'+str(test_predict[i])+'\n')
         csv_writer.writerow([data_test.iloc[i]['id'],test_predict[i]])
-
-    print(test_predict)
 
 
 
