@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from xgboost.sklearn import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 import numpy as np
-
+import csv
 if __name__ == '__main__':
     data = pd.read_csv('./data/happiness_train_abbr.csv')
     data.info()
@@ -71,9 +71,23 @@ if __name__ == '__main__':
     # plt.show()
 
     data_test=pd.read_csv('./data/happiness_test_abbr.csv')
-    data_test.info()
+    df=data_test[['province','income',
+               'house','marital','status_3_before','health','depression']];
 
-    test_predict = model.predict(data_test)
+
+    data_test.info()
+    print(data_test.head(10))
+    test_predict = model.predict(df)
+
+    print(len(test_predict))
+    f = open('./data/res.csv','w',encoding='utf-8')
+    csv_writer = csv.writer(f)
+    csv_writer.writerow(['id','happiness'])
+
+    for i in range(len(test_predict)):
+        #f.write(str(data_test.iloc[i]['id'])+'\t'+str(test_predict[i])+'\n')
+        csv_writer.writerow([data_test.iloc[i]['id'],test_predict[i]])
+
     print(test_predict)
 
 
