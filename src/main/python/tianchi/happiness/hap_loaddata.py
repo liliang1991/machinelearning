@@ -72,7 +72,10 @@ if __name__ == '__main__':
     # plt.show()
 
     data_test=pd.read_csv('./data/happiness_test_abbr.csv')
-    df=data_test[['province','income',
+    data_test['location']=data_test['province'].map(str)+data_test['city'].map(str)+data_test['county'].map(str)
+    data_test['location']=data_test['location'].astype("int")
+
+    df=data_test[['location','income',
                'house','marital','status_3_before','health','depression']];
 
 
