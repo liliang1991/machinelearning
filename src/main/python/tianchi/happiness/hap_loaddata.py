@@ -26,11 +26,11 @@ if __name__ == '__main__':
    # print(data['happiness','year'].value_counts())
     #print(data.groupby(['happiness','year','month']).size().reset_index(name='count'))
     fig, ax = plt.subplots(1,2,figsize=(25,5))
-    print(data.columns)
-
-
+    print(len(data.columns))
+    print(data.corr()['happiness'])
     numerical_features = (data.corr()['happiness'][abs(data.corr()['happiness'])>0.05]).index
     numerical_features = [x for x in data[numerical_features].columns if  x!='happiness' and x!='id' ]
+    print(len(numerical_features))
 # 探究性别和幸福感的分布
     # sns.countplot('year',hue='happiness',data=data)
     # ax[0].set_title('Sex:happiness')
