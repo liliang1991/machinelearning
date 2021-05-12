@@ -10,22 +10,34 @@ if __name__ == '__main__':
     data = pd.read_csv('./data/happiness_train_abbr.csv')
     data = data.loc[data['happiness'] != -8]
     data = data.fillna(-1)
+    data['time']=data['survey_time'].str.split(' ').str[0].str.split('/').str[0]+str()+data['survey_time'].str.split(' ').str[0].str.split('/').str[1]
+    data['time']=data['time'].astype('float')
+
+
+
     data['location']=data['province'].map(str)+data['city'].map(str)+data['county'].map(str)
-    data['location']=data['location'].astype("float")
-    drop_cols = ['province','city','county']
+    data['location']=data['location'].astype('float')
+
+    drop_cols = ['province','city','county','survey_time']
     data.drop(drop_cols, axis=1, inplace=True)
+
+
     #print(data['location'].head(10)).astype("int")
-    print(data['happiness'].value_counts())
-    fig, ax = plt.subplots(1,2,figsize=(15,5))
-    numerical_features = [x for x in data.columns if data[x].dtype == np.float or data[x].dtype == np.int and x!='happiness' and x!='id']
-    # 探究性别和幸福感的分布
-    sns.countplot('gender',hue='happiness',data=data)
-    ax[1].set_title('Sex:happiness')
-    plt.show()
+   # print(data['happiness','year'].value_counts())
+    #print(data.groupby(['happiness','year','month']).size().reset_index(name='count'))
+    fig, ax = plt.subplots(1,2,figsize=(25,5))
+    print(data.columns)
+
+
+    numerical_features = (data.corr()['happiness'][abs(data.corr()['happiness'])>0.05]).index
+    numerical_features = [x for x in data[numerical_features].columns if  x!='happiness' and x!='id' ]
+# 探究性别和幸福感的分布
+    # sns.countplot('year',hue='happiness',data=data)
+    # ax[0].set_title('Sex:happiness')
+    # plt.show()
     ## 特征与标签组合的散点可视化
     # sns.pairplot(data=data,diag_kind='hist', hue= 'happiness')
     # plt.show()
-    print(numerical_features)
     # for col in data.columns:
     #     sns.boxplot(x='happiness', y=col, saturation=0.5,palette='pastel', data=data)
     #     plt.title(col)
@@ -38,9 +50,10 @@ if __name__ == '__main__':
     # sns.violinplot(x='Features', y='Values', hue='happiness',
     #                data=data, split=True, inner='quart', ax=ax[1], palette='happiness')
     # plt.show()num_class
+    #numerical_features = numerical_features.values.tolist()
     x_train, x_test, y_train, y_test = train_test_split(data[numerical_features],data['happiness'], test_size = 0.2, random_state = 2020)
     ## 定义 XGBoost模型
-    model = XGBClassifier(colsample_bytree = 0.6, learning_rate = 0.3, max_depth= 8, subsample = 0.8,objective='multi:softmax',num_class=5)
+    model = XGBClassifier(colsample_bytree = 0.6, learning_rate = 0.3, max_depth= 6, subsample = 0.8,objective='multi:softmax',num_class=5)
 
     # 在训练集上训练XGBoost模型
     model.fit(x_train, y_train)
@@ -49,6 +62,11 @@ if __name__ == '__main__':
     ## 在训练集和测试集上分布利用训练好的模型进行预测
     train_predict = model.predict(x_train)
     test_predict = model.predict(x_test)
+
+    print(numerical_features)
+    print(numerical_features)
+    sns.barplot(y=data[numerical_features].columns, x=model.feature_importances_)
+    plt.show()
     from sklearn import metrics
 
     # ## 从sklearn库中导入网格调参函数
@@ -86,13 +104,15 @@ if __name__ == '__main__':
     # plt.show()
 
     data_test=pd.read_csv('./data/happiness_test_abbr.csv')
+    data_test['time']=data_test['survey_time'].str.split(' ').str[0].str.split('/').str[0]+str()+data_test['survey_time'].str.split(' ').str[0].str.split('/').str[1]
+    data_test['time']=data_test['time'].astype('float')
+
     data_test['location']=data_test['province'].map(str)+data_test['city'].map(str)+data_test['county'].map(str)
-    data_test['location']=data_test['location'].astype("float")
+    data_test['location']=data_test['location'].astype('float')
+    data_test.drop(drop_cols, axis=1, inplace=True)
 
-    df=data_test[numerical_features];
-
-
-    test_predict = model.predict(df)
+    print(numerical_features)
+    test_predict = model.predict(data_test[numerical_features])
 
     f = open('./data/res.csv','w',encoding='utf-8')
     csv_writer = csv.writer(f)
