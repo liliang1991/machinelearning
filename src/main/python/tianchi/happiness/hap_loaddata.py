@@ -13,6 +13,12 @@ from sklearn.metrics import mean_squared_error
 from sklearn import linear_model
 import csv
 from sklearn.metrics import accuracy_score
+from xgboost import plot_tree
+from xgboost import plot_importance
+import graphviz
+#import os
+from xgboost import XGBRegressor as XGBR
+#os.environ["PATH"] += os.pathsep + 'D:/Program Files (x86)/Graphviz2.38/bin/'
 def  nationality_handle(x):
     if x == -8:
         return 1
@@ -23,6 +29,52 @@ def fun(x):
         return data['family_income'].mean()
     else:
         return x
+def ceate_feature_map(features):
+    outfile = open('xgb.fmap', 'w')
+    i = 0
+    for feat in features:
+        outfile.write('{0}\t{1}\tq\n'.format(i, feat))
+        i = i + 1
+    outfile.close()
+def estimate(model,data):
+
+    #sns.barplot(data.columns,model.feature_importances_)
+    ax1=plot_importance(model,importance_type="gain")
+    ax1.set_title('gain')
+    ax2=plot_importance(model, importance_type="weight")
+    ax2.set_title('weight')
+    ax3 = plot_importance(model, importance_type="cover")
+    ax3.set_title('cover')
+    plt.show()
+def classes(data,label,test):
+    model=XGBClassifier()
+    model.fit(data,label)
+    ans=model.predict(test)
+    estimate(model, data)
+    return ans
+
+def plot_learning_curve(estimator,title,X,y,ax = None,#选择子图
+                        ylim = None,#设置纵坐标取值范围
+                        cv = None,#交叉验证
+                        n_jobs = None#设定所要使用的线程
+                        ):
+    from sklearn.model_selection import learning_curve
+    train_sizes,train_scores,test_scores = learning_curve(estimator,X,y,shuffle = True,cv = cv,random_state=2020,n_jobs = n_jobs)
+    if ax == None:
+        ax = plt.gca()
+    else:
+        ax = plt.figure()
+    ax.set_title(title)
+    if ylim is not None:
+        ax.set_ylim(*ylim)
+    ax.set_xlabel('Training examples')
+    ax.set_ylabel('Score')
+    ax.grid()#绘制表格，不是必须
+    ax.plot(train_sizes,np.mean(train_scores,axis = 1),'o-',color='r',label='Training score')
+    ax.plot(train_sizes,np.mean(test_scores,axis = 1),'o-',color='g',label='Test score')
+    ax.legend(loc = 'best')
+    return ax
+
 if __name__ == '__main__':
 
     data = pd.read_csv('./data/happiness_train_abbr.csv')
@@ -31,7 +83,7 @@ if __name__ == '__main__':
     # data = data.loc[data['happiness'] != -8]
     data['happiness'] = data['happiness'].replace(-8, 3)
     pd.set_option('display.max_columns', None)
-    # print(data.isnull().sum(axis=0))
+    print(data.isnull().sum(axis=0))
 
     # data = data.fillna(-2)
     data["survey_year"] = data['survey_time'].str.split(' ').str[0].str.split('/').str[0].astype('int')
@@ -43,14 +95,14 @@ if __name__ == '__main__':
     # data['time']=data['survey_time'].str.split(' ').str[0].str.split('/').str[0]+str()+data['survey_time'].str.split(' ').str[0].str.split('/').str[1]
     # data['time']=data['time'].astype('float')
 
-    data['location'] = data['province'].map(str) + data['city'].map(str) + data['county'].map(str)
-    data['location'] = data['location'].astype('float')
+    # data['location'] = data['province'].map(str) + data['city'].map(str) + data['county'].map(str)
+    # data['location'] = data['location'].astype('float')
 
     ##删除确实值多的列
-    data['work_type'].fillna(0, inplace=True)
-    data['work_status'].fillna(9, inplace=True)
-    data['work_manage'].fillna(2, inplace=True),
-    data['work_yr'].fillna(0, inplace=True)
+    # data['work_type'].fillna(0, inplace=True)
+    # data['work_status'].fillna(9, inplace=True)
+    # data['work_manage'].fillna(2, inplace=True),
+    # data['work_yr'].fillna(0, inplace=True)
 
     # drop_cols = ['work_status','work_yr','work_type','work_manage']
     # data.drop(drop_cols, axis=1, inplace=True)
@@ -61,24 +113,24 @@ if __name__ == '__main__':
     data.sort_values("survey_age", inplace=True)
     res = data.sort_values(by='survey_age', ascending=False)
     # print(res)
-
-    data['family_income'].fillna(data['family_income'].mean(), inplace=True)
-    data.loc[data['nationality'] == -8,'nationality'] = 1
-    data.loc[data['religion'] == -8,'religion'] = 1
-    data.loc[data['religion_freq'] == -8,'religion_freq'] = 1
     #data['nationality'] = data['nationality'].apply(lambda x: nationality_handle(x))
     #data.loc[data.product_inner_type == -8 , 'nationality' ] = 1
 
-    drop_cols = ['province', 'city', 'county', 'survey_time', 'birth']
+    #drop_cols = ['province', 'city', 'county', 'survey_time', 'birth']
+    drop_cols = [ 'survey_time', 'birth','work_status','work_yr','work_type','work_manage']
+
     data.drop(drop_cols, axis=1, inplace=True)
     #print(data['family_income'].head(10).T)
-
-    data['family_income'] = data['family_income'].apply(lambda x: fun(x))
+    print("========")
+    #print(pd.Series(data['work_manage']).value_counts())
     for (columnName, columnData) in data.iteritems():
-        data.loc[data[columnName] < 0,columnName] = pd.Series(data[columnName]).value_counts().index[0]
-        #print(pd.Series(data[columnName]).value_counts())
-        print('Colunm Name : ' + str(columnName) + "\t" + str(pd.Series(data[columnName]).value_counts()))
+        if(columnName!='family_income'):
+            #data[columnName].fillna(pd.Series(data[columnName]).value_counts().index[0], inplace=True)
+            data.loc[data[columnName] < 0,columnName] = pd.Series(data[columnName]).value_counts().index[0]
+        #print('Colunm Name : ' + str(columnName) + "\t" + str(pd.Series(data[columnName]).value_counts()))
     #print("family_income===" + str(data['family_income'].mean()))
+    data['family_income'].fillna(data['family_income'].mean(), inplace=True)
+    data['family_income'] = data['family_income'].apply(lambda x: fun(x))
 
 
 
@@ -122,17 +174,38 @@ if __name__ == '__main__':
     #               'colsample_bytree': 0.8, 'objective': 'reg:linear', 'eval_metric': 'rmse', 'silent': True, 'nthread': 8}
     dtrain = xgb.DMatrix(x_train, y_train)
     dtest = xgb.DMatrix(x_test, y_test)
-    param = {'booster': 'gbtree', 'max_depth': 2, 'eta': 0.1, 'objective': 'reg:squarederror', 'learning_rate': 0.3,
-             'colsample_bytree': 0.6, "subsample": 0.9}
-    model = xgb.train(param, dtrain, num_boost_round=50)
+    param = {'booster': 'gbtree', 'max_depth': 4, 'eta': 0.1, 'objective': 'reg:squarederror', 'learning_rate': 0.05,
+             'colsample_bytree': 0.8, "subsample": 0.7,'silent':0}
+    model = xgb.train(param, dtrain, num_boost_round=2000)
     pred_test = model.predict(dtest)
     pred_train = model.predict(dtrain)
-    for i in range(len(pred_test)):
-        pred_test[i] = pred_test[i]
+    # for i in range(len(pred_test)):
+    #     pred_test[i] = pred_test[i]
         # print(pred_test[i])
     print(mean_squared_error(dtrain.get_label(), pred_train))
     print(mean_squared_error(dtest.get_label(), pred_test))
-    ## 定义参数取值范围
+    cv = KFold(n_splits=5, shuffle = True, random_state=42)
+    plot_learning_curve(XGBR(n_estimators = 100,random_state = 2020),'XGB',x_train,y_train,ax = None,cv = cv)
+    plt.show()
+    ######tree
+    # ceate_feature_map(numerical_features)
+    # plot_tree(model)
+    # fig = plt.gcf()
+    # fig.set_size_inches(150, 100)
+    # fig.savefig('tree.png')
+
+
+    #sns.barplot(y=data[numerical_features].columns, x=model.feature_importances_)
+
+
+
+    # ans=classes(x_train,y_train,x_test)
+    # pre=accuracy_score(y_test, ans)
+    # ##模型训练的准确率百分比
+    # print('acc=',accuracy_score(y_test,ans))
+    #plt.show()
+
+## 定义参数取值范围
     # learning_rate = [0.1, 0.3, 0.6]
     # subsample = [0.8, 0.9]
     # colsample_bytree = [0.6, 0.8]
@@ -169,8 +242,8 @@ if __name__ == '__main__':
     data_test["survey_hour"] = data_test['survey_time'].str.split(' ').str[1].str.split(':').str[0].astype('int')
     data_test["survey_year"] = data_test['survey_time'].str.split(' ').str[0].str.split('/').str[0].astype('int')
 
-    data_test['location'] = data_test['province'].map(str) + data_test['city'].map(str) + data_test['county'].map(str)
-    data_test['location'] = data_test['location'].astype('int')
+    # data_test['location'] = data_test['province'].map(str) + data_test['city'].map(str) + data_test['county'].map(str)
+    # data_test['location'] = data_test['location'].astype('int')
     data_test["survey_age"] = data_test["survey_year"] - data_test["birth"]
 
     data_test.drop(drop_cols, axis=1, inplace=True)
