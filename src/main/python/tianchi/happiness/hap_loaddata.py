@@ -18,6 +18,7 @@ from xgboost import plot_importance
 import graphviz
 #import os
 from xgboost import XGBRegressor as XGBR
+from sklearn.linear_model import LinearRegression
 #os.environ["PATH"] += os.pathsep + 'D:/Program Files (x86)/Graphviz2.38/bin/'
 def  nationality_handle(x):
     if x == -8:
@@ -53,27 +54,51 @@ def classes(data,label,test):
     estimate(model, data)
     return ans
 
-def plot_learning_curve(estimator,title,X,y,ax = None,#选择子图
-                        ylim = None,#设置纵坐标取值范围
-                        cv = None,#交叉验证
-                        n_jobs = None#设定所要使用的线程
-                        ):
-    from sklearn.model_selection import learning_curve
-    train_sizes,train_scores,test_scores = learning_curve(estimator,X,y,shuffle = True,cv = cv,random_state=2020,n_jobs = n_jobs)
-    if ax == None:
-        ax = plt.gca()
-    else:
-        ax = plt.figure()
-    ax.set_title(title)
-    if ylim is not None:
-        ax.set_ylim(*ylim)
-    ax.set_xlabel('Training examples')
-    ax.set_ylabel('Score')
-    ax.grid()#绘制表格，不是必须
-    ax.plot(train_sizes,np.mean(train_scores,axis = 1),'o-',color='r',label='Training score')
-    ax.plot(train_sizes,np.mean(test_scores,axis = 1),'o-',color='g',label='Test score')
-    ax.legend(loc = 'best')
-    return ax
+def plot_learning_curve(algo, X_train, X_test, y_train, y_test):
+    """绘制学习曲线：只需要传入算法(或实例对象)、X_train、X_test、y_train、y_test"""
+    """当使用该函数时传入算法，该算法的变量要进行实例化，如：PolynomialRegression(degree=2)，变量 degree 要进行实例化"""
+    train_score = []
+    test_score = []
+    for i in range(1, len(X_train)+1):
+        algo.fit(X_train[:i], y_train[:i])
+
+        y_train_predict = algo.predict(X_train[:i])
+        train_score.append(mean_squared_error(y_train[:i], y_train_predict))
+
+        y_test_predict = algo.predict(X_test)
+        test_score.append(mean_squared_error(y_test, y_test_predict))
+
+    plt.plot([i for i in range(1, len(X_train)+1)],
+             train_score, label="train")
+    plt.plot([i for i in range(1, len(X_train)+1)],
+             test_score, label="test")
+
+    plt.legend()
+    plt.axis([0, len(X_train)+1, 0, 1])
+    plt.show()
+
+
+# def plot_learning_curve(estimator,title,X,y,ax = None,#选择子图
+#                         ylim = None,#设置纵坐标取值范围
+#                         cv = None,#交叉验证
+#                         n_jobs = None#设定所要使用的线程
+#                         ):
+#     from sklearn.model_selection import learning_curve
+#     train_sizes,train_scores,test_scores = learning_curve(estimator,X,y,shuffle = True,cv = cv,random_state=2020,n_jobs = n_jobs)
+#     if ax == None:
+#         ax = plt.gca()
+#     else:
+#         ax = plt.figure()
+#     ax.set_title(title)
+#     if ylim is not None:
+#         ax.set_ylim(*ylim)
+#     ax.set_xlabel('Training examples')
+#     ax.set_ylabel('Score')
+#     ax.grid()#绘制表格，不是必须
+#     ax.plot(train_sizes,np.mean(train_scores,axis = 1),'o-',color='r',label='Training score')
+#     ax.plot(train_sizes,np.mean(test_scores,axis = 1),'o-',color='g',label='Test score')
+#     ax.legend(loc = 'best')
+#     return ax
 
 if __name__ == '__main__':
 
@@ -83,7 +108,8 @@ if __name__ == '__main__':
     # data = data.loc[data['happiness'] != -8]
     data['happiness'] = data['happiness'].replace(-8, 3)
     pd.set_option('display.max_columns', None)
-    print(data.isnull().sum(axis=0))
+    #print(data.isnull().sum(axis=0))
+
 
     # data = data.fillna(-2)
     data["survey_year"] = data['survey_time'].str.split(' ').str[0].str.split('/').str[0].astype('int')
@@ -99,10 +125,10 @@ if __name__ == '__main__':
     # data['location'] = data['location'].astype('float')
 
     ##删除确实值多的列
-    # data['work_type'].fillna(0, inplace=True)
-    # data['work_status'].fillna(9, inplace=True)
-    # data['work_manage'].fillna(2, inplace=True),
-    # data['work_yr'].fillna(0, inplace=True)
+    data['work_type'].fillna(0, inplace=True)
+    data['work_status'].fillna(9, inplace=True)
+    data['work_manage'].fillna(2, inplace=True),
+    data['work_yr'].fillna(0, inplace=True)
 
     # drop_cols = ['work_status','work_yr','work_type','work_manage']
     # data.drop(drop_cols, axis=1, inplace=True)
@@ -117,7 +143,8 @@ if __name__ == '__main__':
     #data.loc[data.product_inner_type == -8 , 'nationality' ] = 1
 
     #drop_cols = ['province', 'city', 'county', 'survey_time', 'birth']
-    drop_cols = [ 'survey_time', 'birth','work_status','work_yr','work_type','work_manage']
+    ##'floor_area','height_cm','weight_jin'
+    drop_cols = [ 'survey_time', 'birth']
 
     data.drop(drop_cols, axis=1, inplace=True)
     #print(data['family_income'].head(10).T)
@@ -140,7 +167,7 @@ if __name__ == '__main__':
     # print(data.isnull().sum()/data.isnull().count()).sort_values(ascending=False)
     # print(data.isnull().sum(axis=0))
     # print(data['location'].head(10)).astype("int")
-    # print(data['happiness','year'].value_counts())
+    print(data['happiness'].value_counts())
     # print(data.groupby(['happiness','year','month']).size().reset_index(name='count'))
     # fig, ax = plt.subplots(1,2,figsize=(25,5))
     # numerical_features = (data.corr()['happiness'][abs(data.corr()['happiness'])>0.05]).index
@@ -174,9 +201,10 @@ if __name__ == '__main__':
     #               'colsample_bytree': 0.8, 'objective': 'reg:linear', 'eval_metric': 'rmse', 'silent': True, 'nthread': 8}
     dtrain = xgb.DMatrix(x_train, y_train)
     dtest = xgb.DMatrix(x_test, y_test)
+    #https://blog.51cto.com/u_15127527/2688437
     param = {'booster': 'gbtree', 'max_depth': 4, 'eta': 0.1, 'objective': 'reg:squarederror', 'learning_rate': 0.05,
-             'colsample_bytree': 0.8, "subsample": 0.7,'silent':0}
-    model = xgb.train(param, dtrain, num_boost_round=2000)
+             'colsample_bytree': 0.8, "subsample": 0.7,"verbosity":1,"max_delta_step":4,"tree_method":"exact","eval_metric":"mae"}
+    model = xgb.train(param, dtrain, num_boost_round=200)
     pred_test = model.predict(dtest)
     pred_train = model.predict(dtrain)
     # for i in range(len(pred_test)):
@@ -184,9 +212,14 @@ if __name__ == '__main__':
         # print(pred_test[i])
     print(mean_squared_error(dtrain.get_label(), pred_train))
     print(mean_squared_error(dtest.get_label(), pred_test))
-    cv = KFold(n_splits=5, shuffle = True, random_state=42)
-    plot_learning_curve(XGBR(n_estimators = 100,random_state = 2020),'XGB',x_train,y_train,ax = None,cv = cv)
+    xgb.plot_importance(model)
+    # xgb.plot_importance(model)
+    # plt.rcParams['figure.figsize'] = [3, 3]
     plt.show()
+    #cv = KFold(n_splits=5, shuffle = True, random_state=42)
+    #plot_learning_curve(XGBR(n_estimators = 100,random_state = 2020),'XGB',x_train,y_train,ax = None,cv = cv)
+    #plt.show()
+    #plot_learning_curve(LinearRegression(),x_train, x_test, y_train, y_test)
     ######tree
     # ceate_feature_map(numerical_features)
     # plot_tree(model)
